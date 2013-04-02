@@ -1,7 +1,7 @@
 module Simplify where
 
 import qualified Prelude as P
-import Prelude (Eq(..), Num(..), Show, String, Int, Integer, otherwise, id, error, undefined, ($), (.))
+import SymbolicPrelude
 import Data.Generics (everywhere, everywhere', mkT)
 import CalculusTypes
 

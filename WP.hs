@@ -1,7 +1,7 @@
 module WP (wp, wps) where
 
 import qualified Prelude as P
-import Prelude (Eq(..), Num(..), Show, String, Int, Integer, otherwise, id, error, undefined, ($), (.))
+import SymbolicPrelude
 import Data.Generics (everywhere, mkT)
 import Control.Arrow
 import CalculusTypes
@@ -37,10 +37,10 @@ wps (i : ps) q =
     I.MUL -> binArithOp (*)
 
     -- Ordering / equality operators.
-    I.LT  -> binOrdOp LT
-    I.LTE -> binOrdOp LTE
-    I.GT  -> binOrdOp GT
-    I.GTE -> binOrdOp GTE
+    I.LT  -> binOrdOp (<)
+    I.LTE -> binOrdOp (<=)
+    I.GT  -> binOrdOp (>)
+    I.GTE -> binOrdOp (>=)
     I.EQ  -> binOrdOp EQ
     I.NEQ -> binOrdOp NEQ
 
@@ -97,7 +97,7 @@ wps (i : ps) q =
         with :: Condition -> [Condition -> Condition] -> Condition
         with x fs = P.foldr (>>>) id fs $ x
         
-        -- 
+        -- Retrieves the stack variable at the given stack index.
         stack :: Integer -> Var
         stack 0 = Stack (Var T)
         stack n = Stack ((Var T) - fromInteger n)
