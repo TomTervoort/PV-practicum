@@ -3,7 +3,7 @@
 module CalculusTypes where
 
 import qualified Prelude as P
-import Prelude (Eq(..), Num(..), Show, Read, String, Int, Integer, otherwise, id, error, undefined, ($), (.), (++))
+import SymbolicPrelude
 import Data.Generics (Data, Typeable, everywhere, everywhere', mkT)
 import Types
 

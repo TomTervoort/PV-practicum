@@ -11,9 +11,9 @@ test1 = test True [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN] (Var R
 test2 = test True [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `C.EQ` 130)
 test3 = test True [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `C.EQ` 130)
 test4 = test True [START 1, PUSHLITERAL 1, RETURN] (Var Return `C.EQ` Var (Param 1))
-test5 = test True [START 0, PUSHLITERAL 1, PUSHLITERAL 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN] (Var Return `C.EQ` 10)
+test5 = test True [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN] (Var Return `C.EQ` 10)
 
-test pre prog post = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map show prog ++ ["---END---"]) (map ppc $ wps prog post)
+test pre prog post = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String
         width n s = s ++ replicate (max (n - length s) 0) ' '
 
@@ -46,4 +46,7 @@ ppv (Stack e) = "STACK[" ++ ppe e ++ "]"
 ppv Return = "RETURN"
 ppv T = "T"
 
+ppi :: Instr -> String
+ppi (IFTRUE a b) = "IFTRUE [" ++ show (length a) ++ "] [" ++ show (length b) ++ "]"
+ppi i = show i
 
