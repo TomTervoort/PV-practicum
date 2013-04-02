@@ -1,9 +1,11 @@
 module Main where
 
 import CalculusTypes (Condition, (==>))
+import qualified CalculusTypes as C
 import ProgramTypes
 import Types
-import WP (wp)
+import WP
+import Test (ppc)
 import ToSBV
 
 import Control.Monad
@@ -29,6 +31,9 @@ checkSatisfiable cond = do result@(SatResult smt) <- sat $ preConditionToPredica
                          
 doProve :: (Condition, Condition, Sequence) -> IO ()
 doProve (pre, post, prog) = do let weakestPre = wp prog post
+                                
+                               putStrLn $ "Weakest precondition: '" ++ ppc weakestPre ++ "'."
+                               
                                -- Warn if precondition is not satisfiable.
                                isSat <- checkSatisfiable pre
                                when (not isSat) $ hPutStrLn stderr "Warning: precondition is not satisfiable."
