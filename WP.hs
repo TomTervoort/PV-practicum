@@ -1,4 +1,4 @@
-module WP where
+module WP (wp, wps) where
 
 import qualified Prelude as P
 import Prelude (Eq(..), Num(..), Show, String, Int, Integer, otherwise, id, error, undefined, ($), (.))
@@ -10,6 +10,8 @@ import Types
 import Simplify
 
 infixl 2 //
+
+-- | Substitutes all occurrences of the variable with the expression in the condition.
 (//) :: Expr -> Var -> Condition -> Condition
 (//) to from = simplify . everywhere (mkT subVar) -- simplify is important here: otherwise "T + 1 - 1" and "T" do not match!
   where
@@ -17,41 +19,54 @@ infixl 2 //
                      | otherwise = e
     subVar e = e
 
-stack :: Integer -> Var
-stack 0 = Stack (Var T)
-stack n = Stack ((Var T) - fromInteger n)
-
-fromStack = Var . stack
-boundT n = Var T >= n
-
--- Gives the weakest precondition of the given program given a postcondition.
+-- | Gives the weakest precondition of the given program given a postcondition.
 wp :: I.Sequence -> Condition -> Condition
 wp s = P.head . wps s
 
--- TODO: write as a nice fold.
--- Gives the sequence of weakest preconditions generated.
+-- | Gives the sequence of weakest preconditions generated.
 wps :: I.Sequence -> Condition -> [Condition]
 wps (i : ps) q = 
   case i of
+    -- Initialization.
+    -- Initialize the stack pointer to -1 and set all Param by their Argument equivalents.
     I.START p -> with q' $ (Literal (-1) // T) : [Var (Argument n) // Param n | n <- [1..p]]
+    
+    -- Arithmetic operators.
     I.ADD -> binArithOp (+)
     I.SUB -> binArithOp (-)
     I.MUL -> binArithOp (*)
-    I.PUSHLITERAL l      -> with q' [ Literal l // stack 0
-                                    , Var T + 1 // T       ]
-    I.POP    -> boundT 0 && with q' [ Var T - 1 // T ]
-    I.RETURN -> boundT 0 && with q  -- Deliberately use q instead of q' here, since there is
-                                  -- never a SEQ. This may be benecifical when we implement
-                                  -- "multiple RETURN", or the program incorrectly does not
-                                  -- end with RETURN.
-                            [ fromStack 0 // Return ]
-    I.IFTRUE a b -> boundT 0 && ((fromStack 0 `NEQ` 0 && (with (wp a q') [ Var T - 1 // T ])) || (fromStack 0 `EQ` 0 && (with (wp b q') [ Var T - 1 // T ])))
+
+    -- Ordering / equality operators.
     I.LT  -> binOrdOp LT
     I.LTE -> binOrdOp LTE
     I.GT  -> binOrdOp GT
     I.GTE -> binOrdOp GTE
     I.EQ  -> binOrdOp EQ
     I.NEQ -> binOrdOp NEQ
+
+    -- Stack instructions.
+    I.PUSHLITERAL l               -> with q' [ Literal l // stack 0
+                                             , Var T + 1 // T           ]
+    I.POP             -> boundT 0 && with q' [ Var T - 1 // T           ]
+    I.SETLOCAL    k x             -> with q' [ Literal x // Local k     ]
+    I.LOADLOCAL   k               -> with q' [ Var (Local k) // stack 0
+                                             , Var T + 1 // T           ]
+    I.STORELOCAL  k   -> boundT 0 && with q' [ Var T - 1 // T
+                                             , fromStack 0 // Local k   ]
+    I.LOADPARAM   k               -> with q' [ Var (Param k) // stack 0
+                                             , Var T + 1 // T           ]
+    I.STOREPARAM  k   -> boundT 0 && with q' [ Var T - 1 // T
+                                             , fromStack 0 // Param k   ]
+    I.RETURN          -> boundT 0 && with q  -- Since RETURN terminates the program, use
+                                             -- q here instead of q'. This implements
+                                             -- "return from everywhere".
+                                             [ fromStack 0 // Return    ]
+    
+    -- Branching instructions.
+    I.IFTRUE a b -> boundT 0 
+                 && (  (fromStack 0 `NEQ` 0 && (with (wp a q') [ Var T - 1 // T ])) 
+                    || (fromStack 0 `EQ`  0 && (with (wp b q') [ Var T - 1 // T ])))
+--  I.WHILETRUE TODO
   : qq
   where -- Calculate the weakest preconditions of the continuation of the program.
         -- Keep a sequence of weakest preconditions for printing purposes.
@@ -81,5 +96,20 @@ wps (i : ps) q =
         -- Apply the condition transformations from left to right.
         with :: Condition -> [Condition -> Condition] -> Condition
         with x fs = P.foldr (>>>) id fs $ x
+        
+        -- 
+        stack :: Integer -> Var
+        stack 0 = Stack (Var T)
+        stack n = Stack ((Var T) - fromInteger n)
+
+        -- Retrieves a symbolic expression from the stack at the given index.
+        fromStack :: Integer -> Expr
+        fromStack = Var . stack
+        
+        -- Prepares a condition asserting a minimal value for the stack pointer.
+        boundT :: Expr -> Condition
+        boundT n = Var T >= n
+
+-- Base case: an empty program has the postcondition as its weakest precondition.
 wps [] q = [q]
 
