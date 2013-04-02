@@ -27,18 +27,18 @@ checkSatisfiable cond = do result@(SatResult smt) <- sat $ preConditionToPredica
                             Unsatisfiable _ -> return False
                             _               -> return True
                          
-                      
+doProve :: (Condition, Condition, Sequence) -> IO ()
+doProve (pre, post, prog) = do let weakestPre = wp prog post
+                               -- Warn if precondition is not satisfiable.
+                               isSat <- checkSatisfiable pre
+                               when (not isSat) $ hPutStrLn stderr "Warning: precondition is not satisfiable."
+                              
+                               -- We need to prove whether given precondition implies wp.
+                               let toProve = preConditionToPredicate $ pre ==> weakestPre
+                              
+                               result <- prove toProve
+                               print result
 
 main :: IO ()
-main = do (pre, post, prog) <- liftM parseInput getContents
-          let weakestPre = wp prog post
+main = liftM parseInput getContents >>= doProve
           
-          -- Warn if precondition is not satisfiable.
-          isSat <- checkSatisfiable pre
-          when (not isSat) $ hPutStrLn stderr "Warning: precondition is not satisfiable."
-          
-          -- We need to prove whether given precondition implies wp.
-          let toProve = preConditionToPredicate $ pre ==> weakestPre
-          
-          result <- prove toProve
-          print result
