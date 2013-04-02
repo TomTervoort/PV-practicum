@@ -6,7 +6,7 @@ type Sequence = [Instr]
 
 data Instr = START Int
            | ADD | SUB | MUL
---           | GT  | GTE | LT | LTE | EQ | NEQ
+           | GT  | GTE | LT | LTE | EQ | NEQ
            | PUSHLITERAL Literal
            | POP
            | SETLOCAL Local Literal

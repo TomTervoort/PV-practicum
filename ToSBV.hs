@@ -26,10 +26,10 @@ instance Show IllegalVariableException where
 
 instance Exception IllegalVariableException
 
-countParams :: Condition -> Int
-countParams = gcount (False `mkQ` varIsParam)
- where varIsParam (C.Param _) = True
-       varIsParam _ = False
+countArguments :: Condition -> Int
+countArguments = gcount (False `mkQ` varIsArgument)
+ where varIsArgument (C.Argument _) = True
+       varIsArgument _ = False
 
 conditionToPredicate :: Condition -> Predicate
 conditionToPredicate cond = forAll ["a"] $ conditionToParamPredicate cond
