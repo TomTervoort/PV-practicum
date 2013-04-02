@@ -16,4 +16,4 @@ data Instr = START Int
            | STOREPARAM Param
            | IFTRUE Sequence Sequence
            | RETURN
-  deriving (Show)
+  deriving (Show, Read)

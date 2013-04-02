@@ -3,7 +3,7 @@
 module CalculusTypes where
 
 import qualified Prelude as P
-import Prelude (Eq(..), Num(..), Show, String, Int, Integer, otherwise, id, error, undefined, ($), (.), (++))
+import Prelude (Eq(..), Num(..), Show, Read, String, Int, Integer, otherwise, id, error, undefined, ($), (.), (++))
 import Data.Generics (Data, Typeable, everywhere, everywhere', mkT)
 import Types
 
@@ -57,13 +57,13 @@ data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | E
                | And Condition Condition | Or Condition Condition
                | Not Condition
                | True | False
-  deriving (Data, Typeable, Show)
+  deriving (Data, Typeable, Show, Read)
 
 data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr -- | ...
           | Literal Literal
           | Var Var
           -- | Bool Condition
-  deriving (Data, Typeable, Show, Eq)
+  deriving (Data, Typeable, Show, Eq, Read)
 
 data Var = Local Local    -- Local variables.
          | Param Param    -- Program arguments that may have been touched by the program.
@@ -72,5 +72,5 @@ data Var = Local Local    -- Local variables.
          | Scoped Name    -- Any scoped / named variable (for quantifiers).
          | Return         -- The return variable.
          | T              -- The stack pointer.
-  deriving (Data, Typeable, Show, Eq)
+  deriving (Data, Typeable, Show, Eq, Read)
 

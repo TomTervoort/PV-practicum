@@ -1,6 +1,6 @@
 {-# LANGUAGE Haskell2010, DeriveDataTypeable #-}
 
-module ToSBV where
+module ToSBV (IllegalVariableException, preConditionToPredicate)  where
 
 import Types
 import CalculusTypes (Condition, Expr, Var)
