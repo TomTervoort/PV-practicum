@@ -11,12 +11,12 @@ simplify = everywhere (mkT simplifyConstCond) . everywhere' (mkT simplifyArithme
 -- Rewrite conditions when we can know their results, increasing readability.
 simplifyConstCond :: Condition -> Condition
 -- simplifyConstCond e = e -- uncomment to disable condition rewriting / FIXME: remove line for production
-simplifyConstCond (GT  (Literal a) (Literal b)) = if a P.>  b then True else False
-simplifyConstCond (GTE (Literal a) (Literal b)) = if a P.>= b then True else False
-simplifyConstCond (LT  (Literal a) (Literal b)) = if a P.<  b then True else False
-simplifyConstCond (LTE (Literal a) (Literal b)) = if a P.<= b then True else False
-simplifyConstCond (EQ  (Literal a) (Literal b)) = if a P.== b then True else False
-simplifyConstCond (NEQ (Literal a) (Literal b)) = if a P./= b then True else False
+simplifyConstCond (GT  (Literal a) (Literal b)) = fromBool $ a P.>  b
+simplifyConstCond (GTE (Literal a) (Literal b)) = fromBool $ a P.>= b
+simplifyConstCond (LT  (Literal a) (Literal b)) = fromBool $ a P.<  b
+simplifyConstCond (LTE (Literal a) (Literal b)) = fromBool $ a P.<= b
+simplifyConstCond (EQ  (Literal a) (Literal b)) = fromBool $ a P.== b
+simplifyConstCond (NEQ (Literal a) (Literal b)) = fromBool $ a P./= b
 simplifyConstCond (And False _)     = False
 simplifyConstCond (And _     False) = False
 simplifyConstCond (And True  e)     = e
@@ -26,6 +26,8 @@ simplifyConstCond (Or  _     True)  = True
 simplifyConstCond (Or  False e)     = e
 simplifyConstCond (Or  e     False) = e
 simplifyConstCond (Not (Not e)) = e
+simplifyConstCond (Not True) = False
+simplifyConstCond (Not False) = True
 simplifyConstCond e = e
 
 -- Simplify additions / subtractions to their canonical form.

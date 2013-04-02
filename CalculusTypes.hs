@@ -42,6 +42,16 @@ instance Num Expr where
   abs e = e * signum e
   signum = error "Taking integer sign of symbolic expression."
 
+(==>) :: Boolean b => b -> b -> b
+a ==> b = (not a) || b
+
+(<==>) :: Boolean b => b -> b -> b
+a <==> b = (a ==> b) && (b ==> a)
+
+fromBool :: Boolean b => P.Bool -> b
+fromBool P.True = true
+fromBool P.False = false
+
 data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | EQ Expr Expr | NEQ Expr Expr
                -- | Forall Name Condition | ...
                | And Condition Condition | Or Condition Condition
@@ -52,10 +62,15 @@ data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | E
 data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr -- | ...
           | Literal Literal
           | Var Var
+          -- | Bool Condition
   deriving (Data, Typeable, Show, Eq)
 
-data Var = Local Local  | Param Param
-         | Stack Expr   | Scoped Name
-         | Return       | T
+data Var = Local Local    -- Local variables.
+         | Param Param    -- Program arguments that may have been touched by the program.
+         | Argument Param -- Untouched program arguments.
+         | Stack Expr     -- Stack location, with an integer expression indicating position relative to the top of the stack.
+         | Scoped Name    -- Any scoped / named variable (for quantifiers).
+         | Return         -- The return variable.
+         | T              -- The stack pointer.
   deriving (Data, Typeable, Show, Eq)
 

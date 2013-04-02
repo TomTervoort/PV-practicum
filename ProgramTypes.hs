@@ -4,10 +4,9 @@ import Types
 
 type Sequence = [Instr]
 
-data Instr = START
-           | ADD
-           | SUB
-           | MUL
+data Instr = START Int
+           | ADD | SUB | MUL
+--           | GT  | GTE | LT | LTE | EQ | NEQ
            | PUSHLITERAL Literal
            | POP
            | SETLOCAL Local Literal

@@ -37,7 +37,7 @@ wp s = P.head . wps s
 wps :: Sequence -> Condition -> [Condition]
 wps (i : ps) q = 
   case i of
-    START -> with q' [ Literal (-1) // T ]
+    START p -> with q' $ (Literal (-1) // T) : [Var (Argument n) // Param n | n <- [1..p]]
     ADD -> binOp (+)
     SUB -> binOp (-)
     MUL -> binOp (*)
@@ -50,7 +50,8 @@ wps (i : ps) q =
                                   -- end with RETURN.
                           [ fromStack 0 // Return ]
     IFTRUE a b -> boundT 0 && ((fromStack 0 `NEQ` 0 && (with (wp a q') [ Var T - 1 // T ])) || (fromStack 0 `EQ` 0 && (with (wp b q') [ Var T - 1 // T ])))
-    -- TODO: add missing instrunctions
+    -- TODO: add missing instrunctions EQ, LT, ...
+    -- LT a b -> (a LT b) => Q [ 1 / TopStack ] && !(a LT b) => Q [ 0 / TopStack ]
   : qq
   where qq@(q' : _) = wps ps q
         binOp f = boundT 1

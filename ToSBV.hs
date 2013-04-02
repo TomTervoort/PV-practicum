@@ -22,7 +22,7 @@ data IllegalVariableException = IllegalVariableException Var deriving (Typeable)
 
 instance Show IllegalVariableException where
  show (IllegalVariableException v) = "IllegalVariableException: '" ++ show v 
-                                      ++ "' is not allowed in a precondition."
+                                      ++ "' is not allowed in a precondition or postcondition."
 
 instance Exception IllegalVariableException
 
@@ -57,9 +57,9 @@ expressionToSInteger :: ParamArray -> Expr -> SInt32
 expressionToSInteger params = e2i
  where e2i expr =
         case expr of
-         C.Add a b         -> e2i a + e2i b
-         C.Sub a b         -> e2i a - e2i b
-         C.Mul a b         -> e2i a * e2i b
-         C.Literal i       -> literal $ fromIntegral i
-         C.Var (C.Param p) -> readArray params $ fromIntegral p
-         C.Var var         -> throw $ IllegalVariableException var
+         C.Add a b            -> e2i a + e2i b
+         C.Sub a b            -> e2i a - e2i b
+         C.Mul a b            -> e2i a * e2i b
+         C.Literal i          -> literal $ fromIntegral i
+         C.Var (C.Argument p) -> readArray params $ fromIntegral p
+         C.Var var            -> throw $ IllegalVariableException var

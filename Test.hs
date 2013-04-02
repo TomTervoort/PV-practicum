@@ -6,10 +6,10 @@ import CalculusTypes
 import ProgramTypes
 import WP
 
-test1 = test True [START, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
-test2 = test True [START, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
-test3 = test True [START, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
-test4 = test True [START, PUSHLITERAL 1, RETURN] (Var Return `EQ` Var (Param 1))
+test1 = test True [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
+test2 = test True [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
+test3 = test True [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `EQ` 130)
+test4 = test True [START 1, PUSHLITERAL 1, RETURN] (Var Return `EQ` Var (Param 1))
 
 test pre prog post = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map show prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String
@@ -38,6 +38,7 @@ ppe (Var a) = ppv a
 ppv :: Var -> String
 ppv (Local i) = "LOCAL_" ++ show i
 ppv (Param i) = "PARAM_" ++ show i
+ppv (Argument i) = "ARGUMENT_" ++ show i
 ppv (Scoped n) = "SCOPED_" ++ n
 ppv (Stack e) = "STACK[" ++ ppe e ++ "]"
 ppv Return = "RETURN"
