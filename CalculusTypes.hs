@@ -53,7 +53,7 @@ fromBool P.True = true
 fromBool P.False = false
 
 data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | EQ Expr Expr | NEQ Expr Expr
-               -- | Forall Name Condition | ...
+               | Forall Name Condition | Exists Name Condition
                | And Condition Condition | Or Condition Condition
                | Not Condition
                | True | False
