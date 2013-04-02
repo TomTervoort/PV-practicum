@@ -22,7 +22,7 @@ data IllegalVariableException = IllegalVariableException Var deriving (Typeable)
 
 instance Show IllegalVariableException where
  show (IllegalVariableException v) = "IllegalVariableException: '" ++ show v 
-                                      ++ "' is not allowed in a precondition or postcondition."
+                                      ++ "' is not allowed in a (weakest) precondition."
 
 instance Exception IllegalVariableException
 
