@@ -1,6 +1,2 @@
-*
-!.gitignore
-!*.hs
-!*.tex
-!examples
-!*.lang0
+*.hi
+*.o
