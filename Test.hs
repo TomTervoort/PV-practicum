@@ -34,7 +34,7 @@ test8 = (Var (Argument 0) `C.EQ` (Literal 10),
                                                      [ LOADPARAM 0 ]
                                                      []
                                                   , RETURN ])
-test9 = (True, (C.EQ (Var Return) (Literal 10)), [START 0, SETLOCAL 0 0, PUSHLITERAL 1, WHILETRUE [PUSHLITERAL 10, LOADLOCAL 0, PUSHLITERAL 1, ADD, STORELOCAL 0, LOADLOCAL 0, GTE], LOADLOCAL 0, RETURN])
+test9 = (True, (C.EQ (Var Return) (Literal 2)), [START 0, SETLOCAL 0 0, PUSHLITERAL 1, WHILETRUE [PUSHLITERAL 2, LOADLOCAL 0, PUSHLITERAL 1, ADD, STORELOCAL 0, LOADLOCAL 0, GT], LOADLOCAL 0, RETURN])
 
 test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String

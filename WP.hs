@@ -21,7 +21,7 @@ infixl 2 //
 
 -- | The maximum degree to which a while loop should be unrolled in order to validate it.
 boundedVerificationLength :: Int
-boundedVerificationLength = 20
+boundedVerificationLength = 3
     
 -- | Gives the weakest precondition of the given program given a postcondition.
 wp :: I.Sequence -> Condition -> Condition
@@ -68,13 +68,13 @@ wps (i : ps) q = (: qq) $
     -- Branching instructions.
     I.IFTRUE a b -> boundT 0 
                  && (  (fromStack 0 `NEQ` 0 && (with (wp a q') [ Var T - 1 // T ])) 
-                    || (fromStack 0 `EQ`  0 && (with (wp b q') [ Var T - 1 // T ])))
+                    || (fromStack 0 `EQ`  0 && (with (wp b q') [ Var T - 1 // T ])))                                                                      
     I.WHILETRUE s -> whileInst boundedVerificationLength s
   
   where 
         -- While instruction.
         whileInst 0 _ = boundT 0 && (fromStack 0 `EQ` 0   ==> with q' [ Var T - 1 // T ])
-        whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0  ==> with (wp s (whileInst (n-1) s)) [ Var T - 1 // T ])
+        whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0  ==> with (wp s (whileInst (n-1) s)) [ Var T - 1 // T ]) && whileInst (n-1) s
         
         -- Calculate the weakest preconditions of the continuation of the program.
         -- Keep a sequence of weakest preconditions for printing purposes.
