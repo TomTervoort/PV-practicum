@@ -19,13 +19,17 @@ infixl 2 //
                      | otherwise = e
     subVar e = e
 
+-- | The maximum degree to which a while loop should be unrolled in order to validate it.
+boundedVerificationLength :: Int
+boundedVerificationLength = 3
+    
 -- | Gives the weakest precondition of the given program given a postcondition.
 wp :: I.Sequence -> Condition -> Condition
 wp s = P.head . wps s
 
 -- | Gives the sequence of weakest preconditions generated.
-wps :: I.Sequence -> Condition -> [Condition]
-wps (i : ps) q = 
+wps ::  I.Sequence -> Condition -> [Condition]
+wps (i : ps) q = (: qq) $ 
   case i of
     -- Initialization.
     -- Initialize the stack pointer to -1 and set all Param by their Argument equivalents.
@@ -61,14 +65,18 @@ wps (i : ps) q =
                                              -- q here instead of q'. This implements
                                              -- "return from everywhere".
                                              [ fromStack 0 // Return    ]
-    
     -- Branching instructions.
     I.IFTRUE a b -> boundT 0 
                  && (  (fromStack 0 `NEQ` 0 && (with (wp a q') [ Var T - 1 // T ])) 
                     || (fromStack 0 `EQ`  0 && (with (wp b q') [ Var T - 1 // T ])))
---  I.WHILETRUE TODO
-  : qq
-  where -- Calculate the weakest preconditions of the continuation of the program.
+    I.WHILETRUE s -> whileInst boundedVerificationLength s
+  
+  where 
+        -- While instruction.
+        whileInst 0 _ = boundT 0 && (fromStack 0 `EQ` 0   ==> with q' [ Var T - 1 // T ])
+        whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0  ==> with (wp s (whileInst (n-1) s)) [ Var T - 1 // T ])
+        
+        -- Calculate the weakest preconditions of the continuation of the program.
         -- Keep a sequence of weakest preconditions for printing purposes.
         qq@(q' : _) = wps ps q
 

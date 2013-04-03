@@ -16,4 +16,5 @@ data Instr = START Int
            | STOREPARAM Param
            | IFTRUE Sequence Sequence
            | RETURN
+		   | WHILETRUE Sequence
   deriving (Show, Read)
