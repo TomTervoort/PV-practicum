@@ -10,6 +10,13 @@
 \usepackage{listings}
 \usepackage{comment}
 
+\newcommand{\Q}{\mathcal{Q}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\wp}{\mathbf{wp}}
+\newcommand{\stack}[1]{\mathcal{S}_{#1}}
+
 \makeatletter
 \newcommand*\idstyle{\expandafter\id@style\the\lst@token\relax}
 \def\id@style#1#2\relax{%
@@ -59,19 +66,13 @@
 \maketitle
 
 \section{Introduction}
-%TODO Introduction
+In this report we present our approach to symbolic verification of programs in $\mathit{Lang}_0$ by means of a weakest precondition calculus. We assume programs are well-typed and do not contain references to undeclared variables, allowing us to focus on the weakest precondition calculus.
 
 \section{Approach}
-%TODO Approach
+To prove whether a program $X$ in $\mathit{Lang}_0$ adheres to a specification, represented by pre-condition $\P$ and post-condition $\Q$, we need to find the weakest pre-condition $\wp\ X\ \Q$ of the program given the $\Q$. We can then check whether $\P \Rightarrow \wp\ X\ \Q$. If the condition holds, we can conclude the program adheres to the specification.
 
 \subsection{Weakest precondition rules}
-
-\newcommand{\Q}{\mathcal{Q}}
-\newcommand{\A}{\mathcal{A}}
-\newcommand{\B}{\mathcal{B}}
-\renewcommand{\wp}{\mathbf{wp}}
-\newcommand{\stack}[1]{\mathcal{S}_{#1}}
-
+The weakest precondition rules we use are listed below. Note that the interpretation of the substitution operations on $\Q$ should be from left to right, i.e. first apply the leftmost substitution. $T$ denotes the stack pointer, $\stack{T}$ denotes the value on the stack at position $T$.
 
 \begin{alignat*}{3}
 % PUSHLITERAL
@@ -107,18 +108,85 @@
 % RETURN
 \wp\ &\mathtt{RETURN}\ &\Q &= T \geq 0\\
 &&&\wedge \Q[\stack{T} / \mathbf{return}]\\
-\wp\ &(\mathtt{RETURN}; \B)\ &\Q &= \wp\ \mathtt{RETURN}\ \Q\\\\
 % SEQ
 \wp\ &(\A; \B)\ &\Q &= \wp\ \A\ (\wp\ \B\ \Q)
 \end{alignat*}
 
-In the above expressions, $F_a$ and $F_b$ represent arithmetic and Boolean-yielding operators, such that $\mathcal{F}_a \in \{\mathtt{ADD}, \mathtt{SUB}, \mathtt{MUL}\}$ and $\mathcal{F}_b \in \{\mathtt{LT}, \mathtt{GT}, \mathtt{EQ}, \ldots\}$.
+In the above expressions, $F_a$ and $F_b$ represent arithmetic and Boolean-yielding operators, such that $\mathcal{F}_a \in \{\mathtt{ADD}, \mathtt{SUB}, \mathtt{MUL}\}$ and $\mathcal{F}_b \in \{\mathtt{LT}, \mathtt{GT}, \mathtt{EQ}, \ldots\}$. Note that we have substituted the \texttt{MIN} command with \texttt{SUB} for increased clarity and have added a \texttt{START} command, which is roughly equivalent to the \textbf{prog} declaration in $\mathit{Lang}_0$.
+
+\subsection{Extensions}
+We plan to implement the extensions `return from anywhere' and `bounded verification'. To implement these extensions, we need slightly different weakest precondition rules.
+
+When we encounter a sequence of a \texttt{RETURN} followed by other instructions, we just ignore the rest of the instructions and apply the \texttt{RETURN} rule immediately. The rule for \texttt{WHILETRUE} is slightly more complicated. For some given $\mathit{bound}$, we essentially unroll the evaluation of the while-loop for $\{1, \ldots, \mathit{bound}\}$ iterations. If we exceed the maximum number of iterations, we blindly assume the program execution meets the post-condition.
+
+\begin{alignat*}{3}
+% RETURN from anywhere
+\wp\ &\mathtt{RETURN}\ &\Q &= T \geq 0\\
+&&&\wedge \Q_{\mathit{post}}[\stack{T} / \mathbf{return}]\\
+\wp\ &(\mathtt{RETURN}; \B)\ &\Q &= \wp\ \mathtt{RETURN}\ \Q\\\\
+% WHILETRUE
+\wp\ &(\mathtt{WHILETRUE}\ \A)\ &\Q &= w_{\mathit{bound}}\\
+&&w_0 &= T \geq 0\\
+&&&\wedge \stack{T} = \mathtt{false} \Rightarrow Q[T - 1 / T]\\
+&&w_k &= T \geq 0\\
+&&&\wedge \stack{T} \neq \mathtt{false} \Rightarrow \wp\ (\mathtt{POP}; \A)\ w_{k-1}\\
+&&&\wedge w_{k-1}
+\end{alignat*}
+
+Note that the \texttt{IFTRUE} and \texttt{WHILETRUE} rules would normally break the `return from anywhere' behaviour, as \texttt{RETURN} would enforce the weakest precondition of the continuation of the \texttt{IFTRUE} / \texttt{WHILETRUE} instead of the actual post-condition. Hence the variable $\Q_{\mathit{post}}$ in the \texttt{RETURN} rule, which we let contain the actual post-conditions from the program specification.
+
+\begin{comment}
+whileInst 0 _ = boundT 0 && (fromStack 0 `EQ` 0  `whileOp` with q [ Var T - 1 // T ])
+
+whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0 `whileOp` wp' (I.POP:s) (whileInst (n-1) s) post) `whileJunc` whileInst (n-1) s
+\end{comment}
 
 \section{Implementation}
-%TODO Implementation
+Implementation of a calculus with substitution rules can easily go wrong. Therefore, we try to implement our weakest precondition calculus in such a way that it closely adheres to the weakest precondition rules we specified below. This way we try to ensure, although we cannot directly proof it, that our implementation is an actual representation of the rules.
+
+There are a few peculiarities in the implementation of our weakest precondition calculus. First, we need to represent both Boolean values as well as integer values on the stack. Since we assume the program to be correctly typed, we can use any integer representation for Booleans. We do so by applying the age-old rule from C: \texttt{false} is represented by $0$, any other value represents \texttt{true}. Note that our weakest precondition rules already did not check for something explicitly being \texttt{true}: they checked inequality with \texttt{false} instead, making this work out of the box.
+
+We represent Boolean conditions (such as the $\P$ and $\Q$), arithmetic expressions and variables in their own data type.
+\begin{haskell}
+data Condition = GT Expr Expr  | GTE Expr Expr | LT Expr Expr
+               | LTE Expr Expr | EQ Expr Expr  | NEQ Expr Expr
+               | Forall Name Condition   | Exists Name Condition
+               | And Condition Condition | Or Condition Condition
+               | Not Condition
+               | True | False
+  deriving (Data, Typeable, Show, Eq, Read)
+
+data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr
+          | Literal Literal
+          | Var Var
+  deriving (Data, Typeable, Show, Eq, Read)
+
+data Var = Local Local    -- Local variables.
+         | Param Param    -- Program arguments that may have been touched
+                          -- by the program.
+         | Argument Param -- Untouched program arguments.
+         | Stack Expr     -- Stack location, with an integer expression
+                          -- indicating position relative to the top of
+                          -- the stack.
+         | Scoped Name    -- Any scoped / named variable (for quantifiers).
+         | Return         -- The return variable.
+         | T              -- The stack pointer.
+  deriving (Data, Typeable, Show, Eq, Read)
+\end{haskell}
 
 \subsection{Substitution}
-%TODO Substitution
+Our weakest precondition rules consist of Boolean expressions and substitutions of variables. Substituting variables can most easily be done by traversing the entire expression, replacing any variable where necessary. We neatly express this as a generic map over the data structure, keeping us from having to implement rules for every constructor and therefore keeping us from making mistakes.
+
+\begin{haskell}
+(//) :: Expr -> Var -> Condition -> Condition
+(//) to from = simplify . everywhere (mkT subVar)
+  where
+    subVar e@(Var v) | v == from = to
+                     | otherwise = e
+    subVar e = e
+\end{haskell}
+
+Note the occurrence of \textit{simplify} in the equation. Not only is it nice to simplify the expression for printing purposes, it is also necessary to successfully perform substitutions. Note that the \textbf{Stack} constructor takes an \textbf{Expr} as its argument -- this arithmetic expression represents the offset from the top of the stack, materialized by the stack pointer \textbf{T}. If we were to replace (\textbf{Stack} \textbf{T}) by, for instance, (\textbf{Literal} 1), we would not replace (\textbf{Stack} ($\mathbf{T} + 1 - 1$)) by default. This is of course an error, since $\mathbf{T} + 1 - 1 = \mathbf{T}$. For this reason, we somehow need to simplify the expressions in the \textbf{Stack} variables.
 
 \subsection{Simplification}
 In order to correctly match expressions involving the stack pointer $T$, we need to simplify expressions to some reduced form. Since expressions involving $T$ (that we need to proof equality on) only contain additions and subtractions, we reduce all such expressions to $\mathtt{ADD}(T, \mathit{literal})$ or $\mathtt{SUB}(T, \mathit{literal})$ (in such a way that the sign of the literal is always positive, favouring $\mathtt{ADD}$ over $\mathtt{SUB}$ when the literal is zero). More generally, we reduce any arithmetic expression $A$ containing multiple sequential additions and subtractions to $\mathtt{ADD}(A', \mathit{literal})$ (or alternatively, $\mathtt{SUB}(\ldots)$) wherever it is safe to do so, accumulating the literals in the expression.
