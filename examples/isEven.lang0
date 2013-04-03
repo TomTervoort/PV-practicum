@@ -1,0 +1,24 @@
+
+prog isEven(x) {
+    
+    PUSHLITERAL 1;
+    whileTrue {
+        LOADPARAM 0;
+        PUSHLITERAL 0;
+        EQ;
+        iftrue {PUSHLITERAL 1; RETURN;}
+        else {}
+
+        LOADPARAM 0;
+        PUSHLITERAL 1;
+        EQ;
+        iftrue {PUSHLITERAL 0; RETURN;}
+        else {}
+
+        LOADPARAM 0;
+        PUSHLITERAL 2;
+        SUB;
+
+        PUSHLITERAL 1;
+    }
+}

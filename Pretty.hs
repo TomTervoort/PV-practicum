@@ -16,6 +16,8 @@ ppc (Or a b) = "(" ++ ppc a ++ " || " ++ ppc b ++ ")"
 ppc (Not a) = "!" ++ ppc a
 ppc C.True = "TRUE"
 ppc C.False = "FALSE"
+ppc (C.Forall n c) = concat ["FORALL ", n, ". ", "(", ppc c, ")"]
+ppc (C.Exists n c) = concat ["EXISTS ", n, ". ", "(", ppc c, ")"]
 
 -- | Not so pretty printer for expressions.
 ppe :: Expr -> String
