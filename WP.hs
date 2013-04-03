@@ -9,6 +9,40 @@ import qualified ProgramTypes as I
 import Types
 import Simplify
 
+-- | The maximum degree to which a while loop should be unrolled in order to validate it.
+boundedVerificationLength :: Int
+boundedVerificationLength = 5
+
+-- Set the while-loop bounded verification mode. Either looseMode or strictMode.
+whileMode = looseMode
+
+-- | Gives the weakest precondition of the given program, given the postcondition.
+wp :: I.Sequence -> Condition -> Condition
+wp s post = wp' s post post
+
+-- | Gives the sequence of weakest preconditions for each instruction of the given program,
+-- given the postcondition.
+wps :: I.Sequence -> Condition -> [Condition]
+wps s post = wps' s post post
+
+
+
+----------------------------
+-- IMPLEMENTATION DETAILS --
+----------------------------
+
+type BoolOp = Condition -> Condition -> Condition
+type WhileMode = (BoolOp, BoolOp)
+
+-- | Ensure the number of iterations of while-loops does not exceed the bounded
+-- length.
+strictMode :: WhileMode
+strictMode = ((&&), (||))
+-- | When while-loops exceed the bounded length, assume the program satisfies the
+-- post-condition.
+looseMode :: WhileMode
+looseMode = ((==>), (&&))
+
 infixl 2 //
 
 -- | Substitutes all occurrences of the variable with the expression in the condition.
@@ -20,20 +54,6 @@ infixl 2 //
     subVar e@(Var v) | v == from = to
                      | otherwise = e
     subVar e = e
-
--- | The maximum degree to which a while loop should be unrolled in order to validate it.
-boundedVerificationLength :: Int
-boundedVerificationLength = 2
-
--- | Gives the weakest precondition of the given program, given the postcondition.
-wp :: I.Sequence -> Condition -> Condition
-wp s post = wp' s post post
-
--- | Gives the sequence of weakest preconditions for each instruction of the given program,
--- given the postcondition.
-wps :: I.Sequence -> Condition -> [Condition]
-wps s post = wps' s post post
-
 
 -- | Gives the weakest precondition of the given instructions given a weakest precondition of 
 -- the sequence continuation and a postcondition. See the definition of wps' for details.
@@ -92,13 +112,7 @@ wps' (i : ps) weak post = (: qq) $
         -- While instruction.
         whileInst 0 _ = boundT 0 && (fromStack 0 `EQ` 0  `whileOp` with q [ Var T - 1 // T ])
         whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0 `whileOp` wp' (I.POP:s) (whileInst (n-1) s) post) `whileJunc` whileInst (n-1) s
-        
-        -- Operator between while condition and weakest precondition.
-        -- (&&) for strictness, (==>) to allow non-termination.
-        whileOp = (&&)
-        -- Operator between while iterations.
-        -- (||) for strictness, (&&) to allow non-termination.
-        whileJunc = (||)
+        (whileOp, whileJunc) = whileMode
         
         -- Calculate the weakest preconditions of the continuation of the program.
         -- Keep a sequence of weakest preconditions for printing purposes.
