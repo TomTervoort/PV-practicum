@@ -8,6 +8,7 @@
 \usepackage[margin=3cm,a4paper]{geometry}
 \usepackage{lmodern}
 \usepackage{listings}
+\usepackage{comment}
 
 \makeatletter
 \newcommand*\idstyle{\expandafter\id@style\the\lst@token\relax}
@@ -71,26 +72,78 @@
 \renewcommand{\wp}{\mathbf{wp}}
 \newcommand{\stack}[1]{\mathcal{S}_{#1}}
 
+
 \begin{alignat*}{3}
+% PUSHLITERAL
+\wp\ &(\mathtt{PUSHLITERAL}\ lit)\ &\Q &= \Q[lit / \stack{T}][T + 1 / T]\\
+% POP
+\wp\ &\mathtt{POP}\ &\Q &= T \geq 0\\
+&&&\wedge \Q[T - 1 / T]\\\\
+% SETLOCAL
 \wp\ &(\mathtt{SETLOCAL}\ k\ x)\ &\Q &= \Q[x / loc_k]\\
-\wp\ &\mathtt{POP}\ &\Q &= \Q[T - 1 / T] \wedge T \geq 0\\
-\wp\ &(\mathtt{PUSHLITERAL}\ lit)\ &\Q &= \Q[lit / \stack{T}][T + 1 / T]\\\\
-\wp\ &(\A; \B)\ &\Q &= \wp\ \A\ (\wp\ \B\ \Q)\\\\
+% LOADLOCAL
+\wp\ &(\mathtt{LOADLOCAL}\ k)\ &\Q &= \Q[loc_k / \stack{T}][T + 1 / T]\\
+% STORELOCAL
+\wp\ &(\mathtt{STORELOCAL}\ k)\ &\Q &= T \geq 0\\
+&&&\wedge\ \Q[T - 1 / T][\stack{T} / loc_k]\\\\
+% LOADPARAM
+\wp\ &(\mathtt{LOADPARAM}\ k)\ &\Q &= \Q[p_k / \stack{T}][T + 1 / T]\\
+% STOREPARAM
+\wp\ &(\mathtt{STOREPARAM}\ k)\ &\Q &= T \geq 0\\
+&&&\wedge\ \Q[T - 1 / T][\stack{T} / p_k]\\\\
+% IFTRUE
 \wp\ &(\mathtt{IFTRUE}\ \A\ \mathtt{ELSE}\ \B)\ &\Q &= T \geq 0\\
 &&&\wedge\ \stack{T} \neq \mathtt{false} \Rightarrow (\wp\ \A\ \Q)[T - 1 / T]\\
 &&&\wedge\ \stack{T} = \mathtt{false} \Rightarrow (\wp\ \B\ \Q)[T - 1 / T]\\\\
-\wp\ &\mathcal{F}\ &\Q &= T \geq 1 \wedge \Q[T - 1 / T][\mathcal{F}(\stack{T-1}, \stack{T}) / \stack{T-1}]\\
-\wp\ &\mathtt{RETURN}\ &\Q &= T \geq 0 \wedge \Q[\stack{T} / \mathbf{return}]\\
+% F_a
+\wp\ &\mathcal{F}_a\ &\Q &= T \geq 1\\
+&&&\wedge \Q[T - 1 / T][\mathcal{F}_a(\stack{T-1}, \stack{T}) / \stack{T-1}]\\
+% F_b
+\wp\ &\mathcal{F}_b\ &\Q &= T \geq 1\\
+&&&\wedge \mathcal{F}_b(\stack{T-1}, \stack{T}) \Rightarrow \Q[T - 1 / T][\mathtt{true} / \stack{T-1}]\\
+&&&\wedge \neg \mathcal{F}_b(\stack{T-1}, \stack{T}) \Rightarrow \Q[T - 1 / T][\mathtt{false} / \stack{T-1}]\\\\
+% START
+\wp\ &(\mathtt{START}\ n)\ &\Q &= \Q[-1 / T][\forall n : a_n / p_n]\\
+% RETURN
+\wp\ &\mathtt{RETURN}\ &\Q &= T \geq 0\\
+&&&\wedge \Q[\stack{T} / \mathbf{return}]\\
+\wp\ &(\mathtt{RETURN}; \B)\ &\Q &= \wp\ \mathtt{RETURN}\ \Q\\\\
+% SEQ
+\wp\ &(\A; \B)\ &\Q &= \wp\ \A\ (\wp\ \B\ \Q)
 \end{alignat*}
 
-Binary operators $\mathcal{F} \in \{\mathtt{ADD}, \mathtt{SUB}, \mathtt{MUL}, \mathtt{EQ}, \ldots\}$
-%TODO this is no longer true for EQ, LT, ...  they are more like F(A, B) ? 1 : 0
+In the above expressions, $F_a$ and $F_b$ represent arithmetic and Boolean-yielding operators, such that $\mathcal{F}_a \in \{\mathtt{ADD}, \mathtt{SUB}, \mathtt{MUL}\}$ and $\mathcal{F}_b \in \{\mathtt{LT}, \mathtt{GT}, \mathtt{EQ}, \ldots\}$.
 
 \section{Implementation}
 %TODO Implementation
 
+\subsection{Substitution}
+%TODO Substitution
+
 \subsection{Simplification}
-%TODO Simplification
+In order to correctly match expressions involving the stack pointer $T$, we need to simplify expressions to some reduced form. Since expressions involving $T$ (that we need to proof equality on) only contain additions and subtractions, we reduce all such expressions to $\mathtt{ADD}(T, \mathit{literal})$ or $\mathtt{SUB}(T, \mathit{literal})$ (in such a way that the sign of the literal is always positive, favouring $\mathtt{ADD}$ over $\mathtt{SUB}$ when the literal is zero). More generally, we reduce any arithmetic expression $A$ containing multiple sequential additions and subtractions to $\mathtt{ADD}(A', \mathit{literal})$ (or alternatively, $\mathtt{SUB}(\ldots)$) wherever it is safe to do so, accumulating the literals in the expression.
+
+To improve performance and legibility of the output, we also rewrite (in)equality and ordering constraints on two literals to their resulting Boolean value, and use the following rules to rewrite the Boolean expressions in the weakest precondition calculus.
+\begin{alignat*}{1}
+\mathtt{false} \wedge A &\longrightarrow \mathtt{false}\\
+\mathtt{true} \wedge A &\longrightarrow A\\
+\mathtt{false} \vee A &\longrightarrow A\\
+\mathtt{true} \vee A &\longrightarrow \mathtt{true}\\
+\neg\neg A &\longrightarrow A\\
+\neg\mathtt{true} &\longrightarrow \mathtt{false}\\
+\neg\mathtt{false} &\longrightarrow \mathtt{true}\\\\
+A \neq B &\longrightarrow \neg(A = B)\\
+A \vee A &\longrightarrow A\\
+\neg A \vee A &\longrightarrow \mathtt{true}\\
+A \wedge A &\longrightarrow A\\
+\neg A \wedge A &\longrightarrow \mathtt{false}
+\end{alignat*}
+All this rewriting greatly reduces the complexity of the weakest precondition expressions, especially when there is branching involved. Simple programs without preconditions can often already be proven by the simplifier, resulting in a weakest precondition \texttt{true} (or alternatively, \texttt{false}).
+
+\begin{comment}
+
+\end{comment}
+
 
 \section{Results}
 %TODO Results / Examples
