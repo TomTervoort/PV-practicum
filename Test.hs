@@ -6,6 +6,7 @@ import CalculusTypes hiding (EQ, NEQ, GT, GTE, LT, LTE)
 import qualified CalculusTypes as C
 import ProgramTypes
 import WP
+import Pretty
 
 arg = Var . Argument
 
@@ -72,8 +73,9 @@ example1 = (True,
                 RETURN
             ]
            )
-           
-example2 = (C.GTE (arg 0) (Literal 0),
+
+-- | The floor of the square root function: return(floor(sqrt(arg0))).
+example2 = (C.GTE (arg 0) 0,
             C.LTE (Var Return `Mul` Var Return) (arg 0)
              `And` C.GT ((Var Return `Add` Literal 1) `Mul` (Var Return `Add` Literal 1)) (arg 0),
             [
@@ -84,6 +86,7 @@ example2 = (C.GTE (arg 0) (Literal 0),
                 WHILETRUE [
                     LOADLOCAL 0,
                     PUSHLITERAL 1,
+                    ADD,
                     STORELOCAL 0,
                     
                     LOADLOCAL 0,
@@ -99,9 +102,12 @@ example2 = (C.GTE (arg 0) (Literal 0),
                 RETURN
             ]
            )
-           
-example3 = (True, 
-            Var Return `C.EQ` arg 0,
+
+-- | A rather complicated way of saying return(a0), by incrementing l0 to the proper
+-- value step-by-step and then returning it. This is useful to trick the simplifier,
+-- it cannot oversimplify this kind of programs.
+example3 = (True,
+            Var Return `C.EQ` (arg 0),
             [
                 START 1,
                 SETLOCAL 0 0,
@@ -123,47 +129,32 @@ example3 = (True,
                     NEQ
                 ],
                 
-                LOADLOCAL 0,
+                LOADPARAM 0,
                 RETURN
             ]
            )
 
+-- FIXME: remove this one.
+-- | Minimal test case for whiletrue.
+test10 =   (True,
+            Var Return `C.EQ` 123,
+            [
+                START 0,
+                
+                PUSHLITERAL 0,
+                WHILETRUE [
+                    PUSHLITERAL 55
+                ],
+                
+                PUSHLITERAL 123,
+                RETURN
+            ]
+           )
 
-test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
+-- | Debugging tool for programs. Prints the weakest precondition of each instruction
+-- in the program.
+test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25)
+                                $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String
         width n s = s ++ replicate (max (n - length s) 0) ' '
-
-ppc :: Condition -> String
-ppc (C.GT a b) = "(" ++ ppe a ++ " > " ++ ppe b ++ ")"
-ppc (C.GTE a b) = "(" ++ ppe a ++ " >= " ++ ppe b ++ ")"
-ppc (C.LT a b) = "(" ++ ppe a ++ " < " ++ ppe b ++ ")"
-ppc (C.LTE a b) = "(" ++ ppe a ++ " <= " ++ ppe b ++ ")"
-ppc (C.EQ a b) = "(" ++ ppe a ++ " == " ++ ppe b ++ ")"
-ppc (C.NEQ a b) = "(" ++ ppe a ++ " != " ++ ppe b ++ ")"
-ppc (And a b) = "(" ++ ppc a ++ " && " ++ ppc b ++ ")"
-ppc (Or a b) = "(" ++ ppc a ++ " || " ++ ppc b ++ ")"
-ppc (Not a) = "!" ++ ppc a
-ppc True = "TRUE"
-ppc False = "FALSE"
-
-ppe :: Expr -> String
-ppe (Add a b) = "(" ++ ppe a ++ " + " ++ ppe b ++ ")"
-ppe (Sub a b) = "(" ++ ppe a ++ " - " ++ ppe b ++ ")"
-ppe (Mul a b) = "(" ++ ppe a ++ " * " ++ ppe b ++ ")"
-ppe (Literal l) = show l
-ppe (Var a) = ppv a
-
-ppv :: Var -> String
-ppv (Local i) = "LOCAL_" ++ show i
-ppv (Param i) = "PARAM_" ++ show i
-ppv (Argument i) = "ARGUMENT_" ++ show i
-ppv (Scoped n) = "SCOPED_" ++ n
-ppv (Stack e) = "STACK[" ++ ppe e ++ "]"
-ppv Return = "RETURN"
-ppv T = "T"
-
-ppi :: Instr -> String
-ppi (IFTRUE a b) = "IFTRUE [" ++ show (length a) ++ "] [" ++ show (length b) ++ "]"
-ppi (WHILETRUE s) = "WHILETRUE [" ++ show (length s) ++ "]"
-ppi i = show i
 

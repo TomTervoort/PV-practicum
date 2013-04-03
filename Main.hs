@@ -5,7 +5,7 @@ import qualified CalculusTypes as C
 import ProgramTypes
 import Types
 import WP
-import Test (ppc)
+import Pretty
 import ToSBV
 
 import Control.Monad
