@@ -3,6 +3,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[margin=3cm,a4paper]{geometry}
 \usepackage{lmodern}
 \usepackage{listings}
@@ -62,6 +64,27 @@
 %TODO Approach
 
 \subsection{Weakest precondition rules}
+
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\wp}{\mathbf{wp}}
+\newcommand{\stack}[1]{\mathcal{S}_{#1}}
+
+\begin{alignat*}{3}
+\wp\ &(\mathtt{SETLOCAL}\ k\ x)\ &\Q &= \Q[x / loc_k]\\
+\wp\ &\mathtt{POP}\ &\Q &= \Q[T - 1 / T] \wedge T \geq 0\\
+\wp\ &(\mathtt{PUSHLITERAL}\ lit)\ &\Q &= \Q[lit / \stack{T}][T + 1 / T]\\\\
+\wp\ &(\A; \B)\ &\Q &= \wp\ \A\ (\wp\ \B\ \Q)\\\\
+\wp\ &(\mathtt{IFTRUE}\ \A\ \mathtt{ELSE}\ \B)\ &\Q &= T \geq 0\\
+&&&\wedge\ \stack{T} \neq \mathtt{false} \Rightarrow (\wp\ \A\ \Q)[T - 1 / T]\\
+&&&\wedge\ \stack{T} = \mathtt{false} \Rightarrow (\wp\ \B\ \Q)[T - 1 / T]\\\\
+\wp\ &\mathcal{F}\ &\Q &= T \geq 1 \wedge \Q[T - 1 / T][\mathcal{F}(\stack{T-1}, \stack{T}) / \stack{T-1}]\\
+\wp\ &\mathtt{RETURN}\ &\Q &= T \geq 0 \wedge \Q[\stack{T} / \mathbf{return}]\\
+\end{alignat*}
+
+Binary operators $\mathcal{F} \in \{\mathtt{ADD}, \mathtt{SUB}, \mathtt{MUL}, \mathtt{EQ}, \ldots\}$
+%TODO this is no longer true for EQ, LT, ...  they are more like F(A, B) ? 1 : 0
 
 \section{Implementation}
 %TODO Implementation
