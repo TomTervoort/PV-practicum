@@ -29,7 +29,7 @@ wps (i : ps) q =
   case i of
     -- Initialization.
     -- Initialize the stack pointer to -1 and set all Param by their Argument equivalents.
-    I.START p -> with q' $ (Literal (-1) // T) : [Var (Argument n) // Param n | n <- [1..p]]
+    I.START p -> with q' $ (Literal (-1) // T) : [Var (Argument n) // Param n | n <- [0..p-1]]
     
     -- Arithmetic operators.
     I.ADD -> binArithOp (+)
