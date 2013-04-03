@@ -20,8 +20,6 @@ import Data.Generics
 -- sbv
 import Data.SBV
 
-type ParamArray = SArray Int32 Int32
-
 data IllegalVariableException = IllegalVariableException Var
                               | UnknownScopedNameException Name
   deriving (Typeable)
@@ -34,14 +32,21 @@ instance Show IllegalVariableException where
 
 instance Exception IllegalVariableException
 
+countParams :: Condition -> Int
+countParams = maximum . (0:) . map (\(C.Param i) -> i) . listify isParam
+ where isParam (C.Param _) = True
+       isParam _ = False
 
 -- | Transforms the intermediate representation of a (weakest) precondition into a Predicate as 
 --   understood by SBV.
 preConditionToPredicate :: Condition -> Predicate
-preConditionToPredicate cond = forAll ["a"] $ preConditionToParamPredicate cond
+preConditionToPredicate cond = makePred labels []
+ where labels = ["a" ++ show i | i <- [1 .. countParams cond]] -- TODO: [1 .. n] or [0 .. n - 1]?
+       makePred [] ps = preConditionToParamPredicate cond ps
+       makePred (l:ls) ps = forAll [l] $ \p -> makePred ls (p:ps)
 
 -- | Transform a condition into a predicate over a parameter array.
-preConditionToParamPredicate :: Condition -> ParamArray -> Predicate
+preConditionToParamPredicate :: Condition -> [SInt32] -> Predicate
 preConditionToParamPredicate cond params = c2p [] cond
  where c2p scoped cond = let e2i = expressionToSInteger params scoped in
         case cond of
@@ -62,7 +67,7 @@ preConditionToParamPredicate cond params = c2p [] cond
        
 -- | Converts an expression to a symbolic integer based on the parameters and the current 
 --   environment of scoped variables.
-expressionToSInteger :: ParamArray -> [(Name, SInt32)] -> Expr -> SInt32
+expressionToSInteger :: [SInt32] -> [(Name, SInt32)] -> Expr -> SInt32
 expressionToSInteger params scoped = e2i
  where e2i expr =
         case expr of
@@ -70,7 +75,7 @@ expressionToSInteger params scoped = e2i
          C.Sub a b            -> e2i a - e2i b
          C.Mul a b            -> e2i a * e2i b
          C.Literal i          -> literal $ fromIntegral i
-         C.Var (C.Argument p) -> readArray params $ fromIntegral p
+         C.Var (C.Argument p) -> params !! p
          C.Var (C.Scoped n)   -> fromMaybe (throw $ UnknownScopedNameException n)
                                   $ lookup n scoped
          C.Var var            -> throw $ IllegalVariableException var
