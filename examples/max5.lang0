@@ -29,6 +29,7 @@ prog max4(a,b,c,d) {
 	iftrue {LOADLOCAL 1; STORELOCAL 0;}
 	else {}
 	
+	LOADLOCAL 0;
 	RETURN;
 }
 
