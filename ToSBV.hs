@@ -33,7 +33,7 @@ instance Show IllegalVariableException where
 instance Exception IllegalVariableException
 
 countParams :: Condition -> Int
-countParams cond = maximum $ 0 : [i | C.Param i <- listify isParam cond]
+countParams cond = maximum $ 0 : [i + 1 | C.Param i <- listify isParam cond]
  where isParam (C.Param _) = True
        isParam _ = False
 
@@ -41,7 +41,7 @@ countParams cond = maximum $ 0 : [i | C.Param i <- listify isParam cond]
 --   understood by SBV.
 preConditionToPredicate :: Condition -> Predicate
 preConditionToPredicate cond = makePred labels []
- where labels = ["a" ++ show i | i <- [1 .. countParams cond]]
+ where labels = ["a" ++ show i | i <- [0 .. countParams cond - 1]]
        makePred [] ps = preConditionToParamPredicate cond $ reverse ps
        makePred (l:ls) ps = forAll [l] $ \p -> makePred ls (p:ps)
 
@@ -75,7 +75,7 @@ expressionToSInteger params scoped = e2i
          C.Sub a b            -> e2i a - e2i b
          C.Mul a b            -> e2i a * e2i b
          C.Literal i          -> literal $ fromIntegral i
-         C.Var (C.Argument p) -> params !! (p - 1)
+         C.Var (C.Argument p) -> params !! p
          C.Var (C.Scoped n)   -> fromMaybe (throw $ UnknownScopedNameException n)
                                   $ lookup n scoped
          C.Var var            -> throw $ IllegalVariableException var
