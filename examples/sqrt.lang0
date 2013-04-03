@@ -1,8 +1,8 @@
 
 prog sqrt(x) {
 	SETLOCAL 0 0;
-	PUSHLITERAL 1;
 	
+	PUSHLITERAL 1;
 	whileTrue {
 		LOADLOCAL 0;
 		PUSHLITERAL 1;

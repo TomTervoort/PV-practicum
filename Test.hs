@@ -99,6 +99,34 @@ example2 = (C.GTE (arg 0) (Literal 0),
                 RETURN
             ]
            )
+           
+example3 = (True, 
+            Var Return `C.EQ` arg 0,
+            [
+                START 1,
+                SETLOCAL 0 0,
+                
+                LOADPARAM 0,
+                PUSHLITERAL 0,
+                NEQ,
+                WHILETRUE [
+                    LOADPARAM 0,
+                    PUSHLITERAL 1,
+                    SUB,
+                    
+                    LOADLOCAL 0,
+                    PUSHLITERAL 1,
+                    ADD,
+                    
+                    LOADPARAM 0,
+                    PUSHLITERAL 0,
+                    NEQ
+                ],
+                
+                LOADLOCAL 0,
+                RETURN
+            ]
+           )
 
 
 test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
