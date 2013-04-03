@@ -1,3 +1,12 @@
+/*****
+* Checks whether a natural number is even. Returns 1 if this is the case and 0 otherwise. The
+* program simply keeps subtracting 2 from the parameter x until it becomes either 0 (meaning an 
+* even number) or 1 (meaning an odd number).
+*
+* Because modulo or divisions are not supported in our logic language, the post-condition uses 
+* existential quantification to check whether the answer is correct: x being even implies that
+* there exists some n for which 2n == x; if x is odd there must be an n for which 2n + 1 == x.
+******/
 
 prog isEven(x) {
     
@@ -22,3 +31,7 @@ prog isEven(x) {
         PUSHLITERAL 1;
     }
 }
+
+Pre: x >= 0
+Post: (return != 0 && exists n. (2 * n == x))
+       || (return == 0 && exists n. (2 * n + 1 == x))

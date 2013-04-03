@@ -1,13 +1,21 @@
-
+/*****
+* This program returns the maximal value of its four arguments. It does this by maintaining a local 
+* variable for the current maximum and comparing each parameter to it, updating it when a larger
+* parameter is encountered. The program, as well as its post-condition, are rather straightforward.
+******/
 
 prog max4(a,b,c,d) {
+
+	// Load paramaters.
 	LOADPARAM 0;
 	LOADPARAM 1;
 	LOADPARAM 2;
 	LOADPARAM 3;
 	
+	// Use local 0 to maintain maximum so far. Start by putting d in it.
 	STORELOCAL 0;
 	
+	// Store c in local 1 and move the value of local 1 to 0 if it is larger.
 	STORELOCAL 1;
 	LOADLOCAL 0;
 	LOADLOCAL 1;
@@ -15,6 +23,7 @@ prog max4(a,b,c,d) {
 	iftrue {LOADLOCAL 1; STORELOCAL 0;}
 	else {}
 	
+	// Repeat for b.
 	STORELOCAL 1;
 	LOADLOCAL 0;
 	LOADLOCAL 1;
@@ -22,6 +31,7 @@ prog max4(a,b,c,d) {
 	iftrue {LOADLOCAL 1; STORELOCAL 0;}
 	else {}
 	
+	// Repeat for a.
 	STORELOCAL 1;
 	LOADLOCAL 0;
 	LOADLOCAL 1;
@@ -29,6 +39,7 @@ prog max4(a,b,c,d) {
 	iftrue {LOADLOCAL 1; STORELOCAL 0;}
 	else {}
 	
+	// Return local 0.
 	LOADLOCAL 0;
 	RETURN;
 }

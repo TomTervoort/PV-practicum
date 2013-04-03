@@ -1,13 +1,26 @@
+/*****
+* This calculates the floor of the square root of a nonnegative integer. It does this by plainly
+* incrementing a variable from 0 until its square becomes higher than parameter x. Once this 
+* happens, you know that the value of this variable minus one is the rounded down square root of x.
+* 
+* If y = floor(sqrt(x)), then it should hold that y^2 is higher than x - 1, smaller than x + 1, and
+* either equal to or smaller than x. This is checked in the post-condition.
+******/
 
 prog sqrt(x) {
+	// Counter variable. Initialize with 0.
 	SETLOCAL 0 0;
 	
+	// Start looping.
 	PUSHLITERAL 1;
 	whileTrue {
+
+		// Increment counter.
 		LOADLOCAL 0;
 		PUSHLITERAL 1;
 		STORELOCAL 0;
 		
+		// Check whether the square of the counter is smaller than x. If not, break from loop.
 		LOADLOCAL 0;
 		LOADLOCAL 0;
 		MUL;
@@ -15,6 +28,7 @@ prog sqrt(x) {
 		LTE;
 	}
 	
+	// Return previous value of counter.
 	LOADLOCAL 0;
 	PUSHLITERAL 1;
 	MIN;
@@ -22,4 +36,5 @@ prog sqrt(x) {
 }
 
 Pre: x >= 0
-Post: return * return <= x && (return + 1) * (return + 1) > x
+Post: return * return <= x && (return + 1) * (return + 1) > x 
+						   && (x == 0 || (return - 1) * (return - 1) > x)
