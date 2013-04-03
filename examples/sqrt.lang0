@@ -1,0 +1,25 @@
+
+prog sqrt(x) {
+	SETLOCAL 0 0;
+	PUSHLITERAL 1;
+	
+	whileTrue {
+		LOADLOCAL 0;
+		PUSHLITERAL 1;
+		STORELOCAL 0;
+		
+		LOADLOCAL 0;
+		LOADLOCAL 0;
+		MUL;
+		LOADPARAM 0;
+		LTE;
+	}
+	
+	LOADLOCAL 0;
+	PUSHLITERAL 1;
+	MIN;
+	RETURN;
+}
+
+Pre: x > 0
+Post: return * return <= x && (return + 1) * (return + 1) > x

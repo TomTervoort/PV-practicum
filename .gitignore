@@ -2,3 +2,5 @@
 !.gitignore
 !*.hs
 !*.tex
+!examples
+!*.lang0

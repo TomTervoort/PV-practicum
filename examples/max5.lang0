@@ -1,0 +1,36 @@
+
+
+prog max4(a,b,c,d) {
+	LOADPARAM 0;
+	LOADPARAM 1;
+	LOADPARAM 2;
+	LOADPARAM 3;
+	
+	STORELOCAL 0;
+	
+	STORELOCAL 1;
+	LOADLOCAL 0;
+	LOADLOCAL 1;
+	LT;
+	iftrue {LOADLOCAL 1; STORELOCAL 0;}
+	else {}
+	
+	STORELOCAL 1;
+	LOADLOCAL 0;
+	LOADLOCAL 1;
+	LT;
+	iftrue {LOADLOCAL 1; STORELOCAL 0;}
+	else {}
+	
+	STORELOCAL 1;
+	LOADLOCAL 0;
+	LOADLOCAL 1;
+	LT;
+	iftrue {LOADLOCAL 1; STORELOCAL 0;}
+	else {}
+	
+	RETURN;
+}
+
+Pre: True
+Post: return >= a && return >= b && return >= c && return >= d
