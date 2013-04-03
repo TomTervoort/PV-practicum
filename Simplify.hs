@@ -19,21 +19,31 @@ simplifyBoolean (LTE (Literal a) (Literal b)) = fromBool $ a P.<= b
 simplifyBoolean (EQ  (Literal a) (Literal b)) = fromBool $ a P.== b
 simplifyBoolean (NEQ (Literal a) (Literal b)) = fromBool $ a P./= b
 -- Simple Boolean logic substitution rules.
-simplifyBoolean (And False _)     = False
-simplifyBoolean (And _     False) = False
-simplifyBoolean (And True  e)     = e
-simplifyBoolean (And e     True)  = e
-simplifyBoolean (Or  True  _)     = True
-simplifyBoolean (Or  _     True)  = True
-simplifyBoolean (Or  False e)     = e
-simplifyBoolean (Or  e     False) = e
-simplifyBoolean (Not (Not e)) = e
-simplifyBoolean (Not True) = False
-simplifyBoolean (Not False) = True
+simplifyBoolean (And False _)     = False -- False && A <==> False
+simplifyBoolean (And _     False) = False -- A && False <==> False
+simplifyBoolean (And True  e)     = e     -- True && A  <==> A
+simplifyBoolean (And e     True)  = e     -- A && True  <==> A
+simplifyBoolean (Or  True  _)     = True  -- True || A  <==> True
+simplifyBoolean (Or  _     True)  = True  -- A || True  <==> True
+simplifyBoolean (Or  False e)     = e     -- A || False <==> A
+simplifyBoolean (Or  e     False) = e     -- False || A <==> A
+simplifyBoolean (Not (Not e)) = e         -- ~(~(A))    <==> A
+simplifyBoolean (Not True)    = False     -- ~True      <==> False
+simplifyBoolean (Not False)   = True      -- ~False     <==> True
 -- If we can proof equality we can substitute EQ and NEQ with True and False.
 -- We usually cannot proof inequality (in terms of Expr), so don't rewrite that case.
 simplifyBoolean e@(EQ  a b) = if a P.== b then True else e
-simplifyBoolean e@(NEQ a b) = if a P.== b then False else e
+simplifyBoolean   (NEQ a b) = Not (EQ a b)             -- A /= B  <==> ~(A == B)
+simplifyBoolean e@(Or  a b) = if a P.== b then a else  -- A || A  <==> A
+  case (a, b) of
+    (Not a', _) -> if a' P.== b then True else e       -- ~A || A <==> True
+    (_, Not b') -> if a P.== b' then True else e       -- A || ~A <==> True
+    _           -> e
+simplifyBoolean e@(And a b) = if a P.== b then a else  -- A && A  <==> A
+  case (a, b) of
+    (Not a', _) -> if a' P.== b then False else e      -- ~A && A <==> False
+    (_, Not b') -> if a P.== b' then False else e      -- A && ~A <==> False
+    _           -> e
 -- Don't rewrite any other conditions.
 simplifyBoolean e = e
 

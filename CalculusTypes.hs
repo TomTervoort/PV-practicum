@@ -57,7 +57,7 @@ data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | E
                | And Condition Condition | Or Condition Condition
                | Not Condition
                | True | False
-  deriving (Data, Typeable, Show, Read)
+  deriving (Data, Typeable, Show, Eq, Read)
 
 data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr -- | ...
           | Literal Literal

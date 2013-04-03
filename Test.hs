@@ -7,13 +7,15 @@ import qualified CalculusTypes as C
 import ProgramTypes
 import WP
 
-test1 = test True [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN] (Var Return `C.EQ` 130)
-test2 = test True [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `C.EQ` 130)
-test3 = test True [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN] (Var Return `C.EQ` 130)
-test4 = test True [START 1, PUSHLITERAL 1, RETURN] (Var Return `C.EQ` Var (Param 1))
-test5 = test True [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN] (Var Return `C.EQ` 10)
+test1 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN])
+test2 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
+test3 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
+test4 = (True, (Var Return `C.EQ` Var (Param 1)), [START 1, PUSHLITERAL 1, RETURN])
+test5 = (True, (Var Return `C.EQ` 10),            [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN])
+test6 = (True, (C.EQ (Var Return) (Literal 10)),  [START 1, LOADPARAM 0, IFTRUE [PUSHLITERAL 20] [PUSHLITERAL 10], LOADPARAM 0, IFTRUE [PUSHLITERAL 10] [], RETURN])
+test7 = (True, (C.EQ (Var Return) (Literal 10)),  [START 1, LOADPARAM 0, IFTRUE [SETLOCAL 1 10] [], LOADPARAM 0, IFTRUE [] [SETLOCAL 1 10], LOADLOCAL 1, RETURN])
 
-test pre prog post = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
+test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String
         width n s = s ++ replicate (max (n - length s) 0) ' '
 
