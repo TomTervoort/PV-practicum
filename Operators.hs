@@ -10,8 +10,6 @@ arg = Var . Argument
 -- | Neat notation for the return value.
 return = Var Return
 
-lit = Literal
-
 -- Definitions of the usual equality / ordering relations.
 type OrdCond = Expr -> Expr -> Condition
 

@@ -29,6 +29,8 @@ checkSatisfiable cond = do result@(SatResult smt) <- sat $ preConditionToPredica
                             Unsatisfiable _ -> return False
                             _               -> return True
                          
+-- | Executes the prover on a tuple (precondition, postcondition, program). Prints result output to
+--   stdout.
 doProve :: (Condition, Condition, Sequence) -> IO ()
 doProve (pre, post, prog) = do let weakestPre = wp prog post
                                
@@ -45,6 +47,8 @@ doProve (pre, post, prog) = do let weakestPre = wp prog post
                                result <- prove toProve
                                putStrLn $ "\n" ++ show result
 
+-- | Main function. Applies doProve to a (precondition, postcondition, program) tuple read from 
+--   stdin.
 main :: IO ()
 main = liftM parseInput getContents >>= doProve
           
