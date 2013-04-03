@@ -137,6 +137,33 @@ example3 = (true,
             ]
            )
 
+-- | Tests whether a natural number is even.
+example4 = (arg 0 >= 0,
+            (return /= 0 && exists "n" (\n -> (2 * n) == arg 0))
+            || (return == 0 && exists "n" (\n -> ((2 * n) + 1) == arg 0)),
+              [
+                START 1,
+                PUSHLITERAL 1,
+                WHILETRUE [
+                    LOADPARAM 0,
+                    PUSHLITERAL 0,
+                    EQ,
+                    IFTRUE [PUSHLITERAL 1, RETURN] [],
+
+                    LOADPARAM 0,
+                    PUSHLITERAL 1,
+                    EQ,
+                    IFTRUE [PUSHLITERAL 0, RETURN] [],
+
+                    LOADPARAM 0,
+                    PUSHLITERAL 2,
+                    SUB,
+
+                    PUSHLITERAL 1
+                ]
+            ]
+         )
+
 -- FIXME: remove this one.
 -- | Minimal test case for whiletrue.
 test10 =   (true,

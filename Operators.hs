@@ -10,6 +10,8 @@ arg = Var . Argument
 -- | Neat notation for the return value.
 return = Var Return
 
+lit = Literal
+
 -- Definitions of the usual equality / ordering relations.
 type OrdCond = Expr -> Expr -> Condition
 
@@ -36,6 +38,14 @@ type OrdCond = Expr -> Expr -> Condition
 -- | Inequality
 (/=) :: OrdCond
 (/=) = NEQ
+
+-- | Forall quantor.
+foreach :: String -> (Expr -> Condition) -> Condition
+foreach name f = Forall name $ f (Var $ Scoped name)
+
+-- | Exists quantor.
+exists :: String -> (Expr -> Condition) -> Condition
+exists name f = Exists name $ f (Var $ Scoped name)
 
 
 -- Definitions of the usual Boolean operations for symbolic conditions.
