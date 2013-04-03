@@ -17,6 +17,9 @@
 \renewcommand{\wp}{\mathbf{wp}}
 \newcommand{\stack}[1]{\mathcal{S}_{#1}}
 
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+
 \makeatletter
 \newcommand*\idstyle{\expandafter\id@style\the\lst@token\relax}
 \def\id@style#1#2\relax{%
@@ -64,6 +67,8 @@
 
 \begin{document}
 \maketitle
+
+\tableofcontents\clearpage
 
 \section{Introduction}
 In this report we present our approach to symbolic verification of programs in $\mathit{Lang}_0$ by means of a weakest precondition calculus. We assume programs are well-typed and do not contain references to undeclared variables, allowing us to focus on the weakest precondition calculus.
@@ -142,9 +147,17 @@ whileInst n s = boundT 0 && (fromStack 0 `NEQ` 0 `whileOp` wp' (I.POP:s) (whileI
 \end{comment}
 
 \section{Implementation}
-Implementation of a calculus with substitution rules can easily go wrong. Therefore, we try to implement our weakest precondition calculus in such a way that it closely adheres to the weakest precondition rules we specified below. This way we try to ensure, although we cannot directly proof it, that our implementation is an actual representation of the rules.
+Implementation of a calculus with substitution rules can easily go wrong. Therefore, we try to implement our weakest precondition calculus in such a way that it closely adheres to the weakest precondition rules we specified before. This way we try to ensure, although we cannot directly proof it, that our implementation is an actual representation of the rules. The following code fragment illustrates this:
 
-There are a few peculiarities in the implementation of our weakest precondition calculus. First, we need to represent both Boolean values as well as integer values on the stack. Since we assume the program to be correctly typed, we can use any integer representation for Booleans. We do so by applying the age-old rule from C: \texttt{false} is represented by $0$, any other value represents \texttt{true}. Note that our weakest precondition rules already did not check for something explicitly being \texttt{true}: they checked inequality with \texttt{false} instead, making this work out of the box.
+\begin{haskell}
+    SETLOCAL  k x -> with q [ Literal x // Local k     ]
+    LOADLOCAL k   -> with q [ Var (Local k) // stack 0
+                            , Var T + 1 // T           ]
+\end{haskell}
+
+Also, we try to make use of datatype-generic code wherever possible by means of the \texttt{syb} package. This greatly decreases the complexity of our implementation.
+
+There are however a few peculiarities in the implementation of our weakest precondition calculus. First, we need to represent both Boolean values as well as integer values on the stack. Since we assume the program to be correctly typed, we can use any integer representation for Booleans. We do so by applying the age-old rule from C: \texttt{false} is represented by $0$, any other value represents \texttt{true}. Note that our weakest precondition rules already did not check for something explicitly being \texttt{true}: they checked inequality with \texttt{false} instead, making this work out of the box.
 
 We represent Boolean conditions (such as the $\P$ and $\Q$), arithmetic expressions and variables in their own data type.
 \begin{haskell}
@@ -206,20 +219,64 @@ A \vee A &\longrightarrow A\\
 A \wedge A &\longrightarrow A\\
 \neg A \wedge A &\longrightarrow \mathtt{false}
 \end{alignat*}
-All this rewriting greatly reduces the complexity of the weakest precondition expressions, especially when there is branching involved. Simple programs without preconditions can often already be proven by the simplifier, resulting in a weakest precondition \texttt{true} (or alternatively, \texttt{false}).
+All this rewriting greatly reduces the complexity of the weakest precondition expressions, especially when there is branching involved. Simple programs without preconditions can often already be proven by the simplifier, resulting in a weakest precondition \texttt{true} (or alternatively, \texttt{false}). Once again, the rewriting function is a generic map over the condition data structure.
 
-\begin{comment}
+\subsection{Proving correctness}
+Since proving any given Boolean formula is an NP-hard problem, we do not bother implementing a solver ourselves. Instead, we use Z3 to solve the Boolean propositions we generate. Fortunately, there exists a package \texttt{sbv} mapping Haskell data types to structures Z3 can understand. To be able to generate our proof, we have to translate our own data structures into something \texttt{sbv} understands. This is a rather trivial procedure, with some minor exceptions. \texttt{sbv} readily supports universal and existential quantification, as well as various kinds of integer types.
 
-\end{comment}
+All variables that our simplifier was not able to factor out need to be mapped to either \texttt{sbv}-supported universal or existential integer variables. The quantification depends on what we are planning to do: if we are checking satisfiability (more on that later), we need existential quantification. For our proof, we need universal quantification. When assigning variables we make sure to name them properly: Z3 can provide counterexamples, which \texttt{sbv} labels with the appropriate variable name. It should be clear that this can be very useful in interpreting the problem.
 
+We do not need any special representation of a stack: given our internal representation, we can only encounter concrete stack positions after substituting \textbf{T} by $-1$ in \texttt{START}. Most of the times, our simplifier will already have removed any of such references. We can treat all remaining stack references just like any other variable, and universally or existentially quantify an integer variable for it.
 
-\section{Results}
-%TODO Results / Examples
+While we need to prove that the program adheres to its specification, the results of a proof can be misleading. If we were to accidentally specify a non-satisfiable pre-condition, our program would always proof correct, no matter the post-condition or the contents of the program. To warn the user in such a case, we first run a satisfiability check on the pre-condition specified. To check for satisfiability of the pre-condition, we existentially quantify over all variables and run the satisfiability checker in \texttt{sbv}.
+
+The bound for bounded verification is specified in module \textsf{WP} and defaults to 5. The behaviour of the bounded verification can also be changed to a strict mode, that guarantees the while-loop terminate within the bound number of iterations. This can be very useful for testing or implementing generated test-cases.
+
+\section{Results / Examples}
+To verify the working of our symbolic prover, we created some example programs. For more details and the program code, please refer to the \texttt{examples/} directory (for $\mathit{Lang}_0$ pseudocode) or refer to the code in module \textsf{Test} (for executable Haskell code).
+
+\subsection{Square root}
+This program calculates the floor of the square root of a nonnegative integer. It does this by plainly incrementing a variable from 0 until its square becomes higher than parameter $x$. Once this happens, you know that the value of this variable minus one is the rounded down square root of $x$.
+
+If $y = \floor{\sqrt{x}}$, then it should hold that $y^2$ is higher than $x - 1$, smaller than $x + 1$, and either equal to or smaller than $x$. This is checked in the post-condition.
+
+\begin{verbatim}
+Prelude Test Main> doProve sqrtExample 
+Given precondition: '(ARGUMENT_0 >= 0)'.
+Weakest precondition of program: [removed long precondition].
+
+Q.E.D.
+\end{verbatim}
+
+\subsection{Maximum of 4}
+This program returns the maximal value of its four arguments. It does this by maintaining a local variable for the current maximum and comparing each parameter to it, updating it when a larger parameter is encountered. The program, as well as its post-condition, are rather straightforward.
+
+\begin{verbatim}
+Prelude Test Main> doProve max4Example 
+Given precondition: 'TRUE'.
+Weakest precondition of program: [removed long precondition].
+
+Q.E.D.
+\end{verbatim}
+
+\subsection{Checking for even number}
+This program checks whether a natural number is even. Returns 1 if this is the case and 0 otherwise. The program simply keeps subtracting 2 from the parameter x until it becomes either 0 (meaning an even number) or 1 (meaning an odd number).
+
+Because modulo or divisions are not supported in our logic language, the post-condition uses existential quantification to check whether the answer is correct: $x$ being even implies that there exists some $n$ for which $2n = x$; if $x$ is odd there must be an $n$ for which $2n + 1 = x$.
+
+\begin{verbatim}
+Given precondition: '(ARGUMENT_0 >= 0)'.
+Weakest precondition of program: [removed long precondition].
+
+Q.E.D.
+\end{verbatim}
 
 \section{Discussion}
-%TODO Discussion: scalability?
+While very simple programs can often quite easily be eliminated to either \texttt{true} or \texttt{false} by the simplifier, the weakest pre-conditions for programs incorporating while-loops usually tend to explode. While we already have quite a powerful simplifier \footnote{Try disabling the Boolean simplification on a non-trivial program -- the program does not even have to be too complex before the calculated weakest precondition takes hundreds of megabytes of memory. For instance, the weakest precondition for the `is even' example is about 6000 characters when pretty printed with the simplifier on (calculated in 400 ms), versus about 1.6 million with the simplifier off, taking 16 seconds to calculate. Times are measured compiled with \texttt{-O}.}, having a more elaborate rewriter might partially solve this problem.
+
+Still, we expect while-loops to always explode exponentially in the worst case. With a low enough bound on the number of loop iterations our approach stays usable, but when higher bounds are required, symbolic verification is not the best choice. Still, bounded verification can be performed in strict mode, which can be useful for automatically generating test-cases. We did however not implement this feature at this point.
 
 \section{Conclusions}
-%TODO Conclusions
+
 
 \end{document}
