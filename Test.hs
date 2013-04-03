@@ -72,6 +72,33 @@ example1 = (True,
                 RETURN
             ]
            )
+           
+example2 = (C.GT (arg 0) (Literal 0),
+            C.LTE (Var Return `Mul` Var Return) (arg 0)
+             `And` C.GT ((Var Return `Add` Literal 1) `Mul` (Var Return `Add` Literal 1)) (arg 0),
+            [
+                START 1,
+                SETLOCAL 0 0,
+                PUSHLITERAL 1,
+                
+                WHILETRUE [
+                    LOADLOCAL 0,
+                    PUSHLITERAL 1,
+                    STORELOCAL 0,
+                    
+                    LOADLOCAL 0,
+                    LOADLOCAL 0,
+                    MUL,
+                    LOADPARAM 0,
+                    LTE
+                ],
+                
+                LOADLOCAL 0,
+                PUSHLITERAL 1,
+                SUB,
+                RETURN
+            ]
+           )
 
 
 test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
