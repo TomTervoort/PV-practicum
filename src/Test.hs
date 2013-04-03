@@ -8,41 +8,6 @@ import WP
 import Pretty
 import Operators
 
-test1 = ( true
-        , return == 130
-        , [ START 0
-          , PUSHLITERAL 100
-          , PUSHLITERAL 30
-          , ADD
-          , RETURN ])
-test2 = (true, (return == 130),           [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
-test3 = (true, (return == 130),           [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
-test4 = (true, (return == arg 1), [START 1, PUSHLITERAL 1, RETURN])
-test5 = (true, (return == 10),            [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN])
-test6 = (true, (return == 10),  [START 1, LOADPARAM 0, IFTRUE [PUSHLITERAL 20] [PUSHLITERAL 10], LOADPARAM 0, IFTRUE [PUSHLITERAL 10] [], RETURN])
-test7 = (true, (return == 10), [ START 1
-                                                  , LOADPARAM 0
-                                                  , IFTRUE 
-                                                      [ SETLOCAL 1 10 ]
-                                                      []
-                                                  , LOADPARAM 0
-                                                  , IFTRUE
-                                                      []
-                                                      [ SETLOCAL 1 10 ]
-                                                  , LOADLOCAL 1
-                                                  , IFTRUE
-                                                      [ PUSHLITERAL 10 ]
-                                                      []
-                                                  , RETURN ])
-test8 = (arg 0 == 10,
-         return == 10,          [ START 1
-                                                  , LOADPARAM 0
-                                                  , IFTRUE
-                                                     [ LOADPARAM 0 ]
-                                                     []
-                                                  , RETURN ])
-test9 = (true, return == 2, [START 0, SETLOCAL 0 0, PUSHLITERAL 1, WHILETRUE [PUSHLITERAL 2, LOADLOCAL 0, PUSHLITERAL 1, ADD, STORELOCAL 0, LOADLOCAL 0, GT], LOADLOCAL 0, RETURN])
-
 -- | See max4.lang0.
 max4Example = 
            (true, 
@@ -168,23 +133,6 @@ isEvenExample =
                 ]
             ]
          )
-
--- FIXME: remove this one.
--- | Minimal test case for whiletrue.
-test10 =   (true,
-            return == 123,
-            [
-                START 0,
-                
-                PUSHLITERAL 0,
-                WHILETRUE [
-                    PUSHLITERAL 55
-                ],
-                
-                PUSHLITERAL 123,
-                RETURN
-            ]
-           )
 
 -- | Debugging tool for programs. Prints the weakest precondition of each instruction
 -- in the program.
