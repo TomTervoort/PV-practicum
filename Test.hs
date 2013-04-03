@@ -73,7 +73,7 @@ example1 = (True,
             ]
            )
            
-example2 = (C.GT (arg 0) (Literal 0),
+example2 = (C.GTE (arg 0) (Literal 0),
             C.LTE (Var Return `Mul` Var Return) (arg 0)
              `And` C.GT ((Var Return `Add` Literal 1) `Mul` (Var Return `Add` Literal 1)) (arg 0),
             [
