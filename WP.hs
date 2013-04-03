@@ -21,7 +21,7 @@ infixl 2 //
 
 -- | The maximum degree to which a while loop should be unrolled in order to validate it.
 boundedVerificationLength :: Int
-boundedVerificationLength = 3
+boundedVerificationLength = 20
     
 -- | Gives the weakest precondition of the given program given a postcondition.
 wp :: I.Sequence -> Condition -> Condition
