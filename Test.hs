@@ -43,7 +43,9 @@ test8 = (arg 0 == 10,
                                                   , RETURN ])
 test9 = (true, return == 2, [START 0, SETLOCAL 0 0, PUSHLITERAL 1, WHILETRUE [PUSHLITERAL 2, LOADLOCAL 0, PUSHLITERAL 1, ADD, STORELOCAL 0, LOADLOCAL 0, GT], LOADLOCAL 0, RETURN])
 
-example1 = (true, 
+-- | See max4.lang0.
+max4Example = 
+           (true, 
             (return >= arg 0) && (return >= arg 1) && (return >= arg 2) && (return >= arg 3),
             
             [	START 4,
@@ -78,9 +80,11 @@ example1 = (true,
             ]
            )
 
--- | The floor of the square root function: return(floor(sqrt(arg0))).
-example2 = (arg 0 >= 0,
-            ((return * return) <= arg 0) && (((return + 1) * (return + 1)) > arg 0),
+-- | The floor of the square root function: return(floor(sqrt(arg0))). See sqrt.lang0.
+sqrtExample = 
+           (arg 0 >= 0,
+            ((return * return) <= arg 0) && (((return + 1) * (return + 1)) > arg 0)
+                                         && (arg 0 == 0 || (((return - 1) * (return - 1)) < arg 0)),
             [
                 START 1,
                 SETLOCAL 0 0,
@@ -137,8 +141,9 @@ example3 = (true,
             ]
            )
 
--- | Tests whether a natural number is even.
-example4 = (arg 0 >= 0,
+-- | Tests whether a natural number is even. See isEven.lang0.
+isEvenExample = 
+           (arg 0 >= 0,
             (return /= 0 && exists "n" (\n -> (2 * n) == arg 0))
             || (return == 0 && exists "n" (\n -> ((2 * n) + 1) == arg 0)),
               [
