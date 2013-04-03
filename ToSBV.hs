@@ -34,9 +34,9 @@ instance Exception IllegalVariableException
 
 getArguments :: Condition -> [Int]
 getArguments cond = if null ixs then [] else [0..maximum ixs]
- where ixs = [i | C.Argument i <- listify isParam cond]
-       isParam (C.Argument _) = True
-       isParam _ = False
+ where ixs = [i | C.Argument i <- listify isArgument cond]
+       isArgument (C.Argument _) = True
+       isArgument _ = False
 
 -- | Transforms the intermediate representation of a (weakest) precondition into a Predicate as 
 --   understood by SBV.
