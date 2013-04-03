@@ -7,11 +7,6 @@ import SymbolicPrelude
 import Data.Generics (Data, Typeable)
 import Types
 
--- | Neat notation for arguments.
-arg = Var . Argument
--- | Neat notation for the return value.
-return = Var Return
-
 -- | Num instance for Expr mostly so we can write "+ 1" without all the datastructure mess.
 instance Num Expr where
   (+) = Add

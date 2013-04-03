@@ -1,8 +1,14 @@
 module Operators where
 
 import qualified Prelude as P
+import SymbolicPrelude
 import CalculusTypes
 
+-- | Neat notation for arguments.
+arg = Var . Argument
+
+-- | Neat notation for the return value.
+return = Var Return
 
 -- Definitions of the usual equality / ordering relations.
 type OrdCond = Expr -> Expr -> Condition
