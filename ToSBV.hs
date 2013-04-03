@@ -1,6 +1,8 @@
 {-# LANGUAGE Haskell2010, DeriveDataTypeable #-}
 
-module ToSBV (IllegalVariableException, preConditionToPredicate, forAll, forSome)  where
+-- | Contains functionality for converting our immediate representation of predicates (the 
+--   Condition datatype) into an SBV representation.
+module ToSBV (IllegalVariableException, preConditionToPredicate)  where
 
 import Types
 import CalculusTypes (Condition, Expr, Var)
@@ -20,6 +22,8 @@ import Data.Generics
 -- sbv
 import Data.SBV
 
+-- | Thrown whenever a variable occurs within a condition that is not supposed to be present in a 
+--   pre- or post-condition.
 data IllegalVariableException = IllegalVariableException Var
                               | UnknownScopedNameException Name
   deriving (Typeable)
@@ -36,18 +40,24 @@ instance Show IllegalVariableException where
 
 instance Exception IllegalVariableException
 
+-- | Represents an SBV quantifier such as forAll or forSome.
 type Quantifier = [String] -> (SInt32 -> Predicate) -> Predicate
 
+-- | Fetches an enumeration of parameters numbers containing as many parameters as used within a
+--   condition.
 getArguments :: Condition -> [Int]
 getArguments cond = if null ixs then [] else [0..maximum ixs]
  where ixs = [i | C.Argument i <- listify isArgument cond]
        isArgument (C.Argument _) = True
        isArgument _              = False
 
+-- | Locates all 'stale variables' within a condition and label them.
 getStaleVarLabels :: Condition -> [String]
 getStaleVarLabels cond = map labelStaleVar ss
  where ss = [v | v <- listify (not . null . labelStaleVar) cond]
 
+-- | Provide an appropriate label for a stal variable, which may either be a stack reference, 
+--   return value, or local variable reference.
 labelStaleVar :: Var -> String
 labelStaleVar (C.Stack (C.Literal i)) = "stack[" ++ show i ++ "]"
 labelStaleVar (C.Return)              = "return"
