@@ -1,9 +1,9 @@
 module Main where
 
-import CalculusTypes (Condition, (==>))
-import qualified CalculusTypes as C
+import CalculusTypes (Condition)
 import ProgramTypes
 import Types
+import Operators ((==>))
 import WP
 import Pretty
 import ToSBV

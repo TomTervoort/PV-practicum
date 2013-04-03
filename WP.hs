@@ -8,6 +8,7 @@ import CalculusTypes
 import qualified ProgramTypes as I
 import Types
 import Simplify
+import Operators
 
 -- | The maximum degree to which a while loop should be unrolled in order to validate it.
 boundedVerificationLength :: Int
@@ -31,7 +32,6 @@ wps s post = wps' s post post
 -- IMPLEMENTATION DETAILS --
 ----------------------------
 
-type BoolOp = Condition -> Condition -> Condition
 type WhileMode = (BoolOp, BoolOp)
 
 -- | Ensure the number of iterations of while-loops does not exceed the bounded
@@ -51,7 +51,7 @@ infixl 2 //
 (//) :: Expr -> Var -> Condition -> Condition
 (//) to from = simplify . everywhere (mkT subVar)
   where
-    subVar e@(Var v) | v == from = to
+    subVar e@(Var v) | v P.== from = to
                      | otherwise = e
     subVar e = e
 

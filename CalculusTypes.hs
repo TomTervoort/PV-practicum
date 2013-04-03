@@ -4,35 +4,15 @@ module CalculusTypes where
 
 import qualified Prelude as P
 import SymbolicPrelude
-import Data.Generics (Data, Typeable, everywhere, everywhere', mkT)
+import Data.Generics (Data, Typeable)
 import Types
 
-class Boolean b where
-  true  :: b
-  false :: b
-  (&&)  :: b -> b -> b
-  (||)  :: b -> b -> b
-  not   :: b -> b
+-- | Neat notation for arguments.
+arg = Var . Argument
+-- | Neat notation for the return value.
+return = Var Return
 
-class (Eq o, Boolean b) => Ord o b where
-  (>)  :: o -> o -> b
-  (>=) :: o -> o -> b
-  (<)  :: o -> o -> b
-  (<=) :: o -> o -> b
-
-instance Boolean Condition where
-  true  = True
-  false = False
-  (&&)  = And
-  (||)  = Or
-  not   = Not
-
-instance Ord Expr Condition where
-  (>)  = GT
-  (>=) = GTE
-  (<)  = LT
-  (<=) = LTE
-
+-- | Num instance for Expr mostly so we can write "+ 1" without all the datastructure mess.
 instance Num Expr where
   (+) = Add
   (-) = Sub
@@ -42,28 +22,17 @@ instance Num Expr where
   abs e = e * signum e
   signum = error "Taking integer sign of symbolic expression."
 
-(==>) :: Boolean b => b -> b -> b
-a ==> b = (not a) || b
-
-(<==>) :: Boolean b => b -> b -> b
-a <==> b = (a ==> b) && (b ==> a)
-
-fromBool :: Boolean b => P.Bool -> b
-fromBool P.True = true
-fromBool P.False = false
-
 data Condition = GT Expr Expr | GTE Expr Expr | LT Expr Expr | LTE Expr Expr | EQ Expr Expr | NEQ Expr Expr
                | Forall Name Condition | Exists Name Condition
                | And Condition Condition | Or Condition Condition
                | Not Condition
                | True | False
-  deriving (Data, Typeable, Show, Eq, Read)
+  deriving (Data, Typeable, Show, P.Eq, Read)
 
-data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr -- | ...
+data Expr = Add Expr Expr | Sub Expr Expr | Mul Expr Expr
           | Literal Literal
           | Var Var
-          -- | Bool Condition
-  deriving (Data, Typeable, Show, Eq, Read)
+  deriving (Data, Typeable, Show, P.Eq, Read)
 
 data Var = Local Local    -- Local variables.
          | Param Param    -- Program arguments that may have been touched by the program.
@@ -72,5 +41,5 @@ data Var = Local Local    -- Local variables.
          | Scoped Name    -- Any scoped / named variable (for quantifiers).
          | Return         -- The return variable.
          | T              -- The stack pointer.
-  deriving (Data, Typeable, Show, Eq, Read)
+  deriving (Data, Typeable, Show, P.Eq, Read)
 

@@ -1,22 +1,22 @@
 -- Some testing routines, including hacked "pretty" printing for some data types.
 module Test where
 
-import Prelude hiding (True, False, GT, LT, EQ)
+import qualified Prelude as P
+import SymbolicPrelude
 import CalculusTypes hiding (EQ, NEQ, GT, GTE, LT, LTE)
 import qualified CalculusTypes as C
 import ProgramTypes
 import WP
 import Pretty
+import Operators
 
-arg = Var . Argument
-
-test1 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN])
-test2 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
-test3 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
-test4 = (True, (Var Return `C.EQ` arg 1), [START 1, PUSHLITERAL 1, RETURN])
-test5 = (True, (Var Return `C.EQ` 10),            [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN])
-test6 = (True, (C.EQ (Var Return) (Literal 10)),  [START 1, LOADPARAM 0, IFTRUE [PUSHLITERAL 20] [PUSHLITERAL 10], LOADPARAM 0, IFTRUE [PUSHLITERAL 10] [], RETURN])
-test7 = (True, (C.EQ (Var Return) (Literal 10)),  [ START 1
+test1 = (True, (return == 130),           [START 0, PUSHLITERAL 100, PUSHLITERAL 30, ADD, RETURN])
+test2 = (True, (return == 130),           [START 0, PUSHLITERAL 0, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
+test3 = (True, (return == 130),           [START 0, PUSHLITERAL 1, IFTRUE [PUSHLITERAL 100] [PUSHLITERAL 200], PUSHLITERAL 30, ADD, RETURN])
+test4 = (True, (return == arg 1), [START 1, PUSHLITERAL 1, RETURN])
+test5 = (True, (return == 10),            [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN])
+test6 = (True, (return == 10),  [START 1, LOADPARAM 0, IFTRUE [PUSHLITERAL 20] [PUSHLITERAL 10], LOADPARAM 0, IFTRUE [PUSHLITERAL 10] [], RETURN])
+test7 = (True, (return == 10),  [ START 1
                                                   , LOADPARAM 0
                                                   , IFTRUE 
                                                       [ SETLOCAL 1 10 ]
@@ -30,8 +30,8 @@ test7 = (True, (C.EQ (Var Return) (Literal 10)),  [ START 1
                                                       [ PUSHLITERAL 10 ]
                                                       []
                                                   , RETURN ])
-test8 = (Var (Argument 0) `C.EQ` (Literal 10),
-         C.EQ (Var Return) (Literal 10),          [ START 1
+test8 = (arg 0 == 10,
+         return == 10,          [ START 1
                                                   , LOADPARAM 0
                                                   , IFTRUE
                                                      [ LOADPARAM 0 ]
@@ -40,7 +40,7 @@ test8 = (Var (Argument 0) `C.EQ` (Literal 10),
 test9 = (True, (C.EQ (Var Return) (Literal 2)), [START 0, SETLOCAL 0 0, PUSHLITERAL 1, WHILETRUE [PUSHLITERAL 2, LOADLOCAL 0, PUSHLITERAL 1, ADD, STORELOCAL 0, LOADLOCAL 0, GT], LOADLOCAL 0, RETURN])
 
 example1 = (True, 
-            (C.GTE (Var Return) (arg 0)) `And` (C.GTE (Var Return) (arg 1)) `And` (C.GTE (Var Return) (arg 2)) `And` (C.GTE (Var Return) (arg 3)),
+            (return >= arg 0) && (return >= arg 1) && (return >= arg 2) && (return >= arg 3),
             
             [	START 4,
                 LOADPARAM 0,
@@ -107,7 +107,7 @@ example2 = (C.GTE (arg 0) 0,
 -- value step-by-step and then returning it. This is useful to trick the simplifier,
 -- it cannot oversimplify this kind of programs.
 example3 = (True,
-            Var Return `C.EQ` (arg 0),
+            return == arg 0,
             [
                 START 1,
                 SETLOCAL 0 0,
@@ -137,7 +137,7 @@ example3 = (True,
 -- FIXME: remove this one.
 -- | Minimal test case for whiletrue.
 test10 =   (True,
-            Var Return `C.EQ` 123,
+            return == 123,
             [
                 START 0,
                 

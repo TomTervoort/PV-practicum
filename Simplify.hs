@@ -1,8 +1,10 @@
 module Simplify where
 
 import qualified Prelude as P
-import SymbolicPrelude
 import Data.Generics (everywhere, everywhere', mkT)
+
+import SymbolicPrelude
+import Operators
 import CalculusTypes
 
 -- | Simplifies a condition for legibility and stack pointer matching correctness.
@@ -59,8 +61,9 @@ simplifyArithmetic = f 0
         f cum (Sub (Literal l) e)           =
           case simplifyArithmetic e of
             Literal l'                     -> Literal $ l - l' + cum
-            s                              -> Sub (Literal $ l + cum) s
+            s                              -> (Literal $ l + cum) - s
         f cum (Sub e (Literal l))           = f (cum - l) e
-        f cum e | cum ==  0 = e
-                | cum P.> 0 = Add e $ Literal cum
-                | cum P.< 0 = Sub e $ Literal $ negate cum
+        f cum e | cum P.== 0 = e
+                | cum P.>  0 = e + (Literal cum)
+                | cum P.<  0 = e - (Literal $ negate cum)
+

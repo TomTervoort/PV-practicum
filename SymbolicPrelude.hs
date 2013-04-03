@@ -1,7 +1,8 @@
+-- | Re-exports a very small subset of the Prelude, that does not interact with
+-- any symbolic operations we defined.
 module SymbolicPrelude (module Prelude) where
 
-import Prelude ( Eq(..)
-               , Num(..)
+import Prelude ( Num(..)
                , Show
                , Read
                , String
@@ -14,4 +15,12 @@ import Prelude ( Eq(..)
                , ($)
                , (.)
                , (++)
+               , map
+               , zip
+               , length
+               , max
+               , min
+               , replicate
+               , mapM_
+               , putStrLn
                )
