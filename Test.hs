@@ -13,8 +13,27 @@ test3 = (True, (Var Return `C.EQ` 130),           [START 0, PUSHLITERAL 1, IFTRU
 test4 = (True, (Var Return `C.EQ` Var (Param 1)), [START 1, PUSHLITERAL 1, RETURN])
 test5 = (True, (Var Return `C.EQ` 10),            [START 2, LOADPARAM 1, LOADPARAM 2, LTE, IFTRUE [PUSHLITERAL 10] [PUSHLITERAL 20], RETURN])
 test6 = (True, (C.EQ (Var Return) (Literal 10)),  [START 1, LOADPARAM 0, IFTRUE [PUSHLITERAL 20] [PUSHLITERAL 10], LOADPARAM 0, IFTRUE [PUSHLITERAL 10] [], RETURN])
-test7 = (True, (C.EQ (Var Return) (Literal 10)),  [START 1, LOADPARAM 0, IFTRUE [SETLOCAL 1 10] [], LOADPARAM 0, IFTRUE [] [SETLOCAL 1 10], LOADLOCAL 1, RETURN])
-
+test7 = (True, (C.EQ (Var Return) (Literal 10)),  [ START 1
+                                                  , LOADPARAM 0
+                                                  , IFTRUE 
+                                                      [ SETLOCAL 1 10 ]
+                                                      []
+                                                  , LOADPARAM 0
+                                                  , IFTRUE
+                                                      []
+                                                      [ SETLOCAL 1 10 ]
+                                                  , LOADLOCAL 1
+                                                  , IFTRUE
+                                                      [ PUSHLITERAL 10 ]
+                                                      []
+                                                  , RETURN ])
+test8 = (Var (Argument 0) `C.EQ` (Literal 10),
+         C.EQ (Var Return) (Literal 10),          [ START 1
+                                                  , LOADPARAM 0
+                                                  , IFTRUE
+                                                     [ LOADPARAM 0 ]
+                                                     []
+                                                  , RETURN ])
 test (pre, post, prog) = mapM_ (\(x, y) -> putStrLn $ x ++ y) $ zip (map (width 25) $ map ppi prog ++ ["---END---"]) (map ppc $ wps prog post)
   where width :: Int -> String -> String
         width n s = s ++ replicate (max (n - length s) 0) ' '
