@@ -1,0 +1,81 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[margin=3cm,a4paper]{geometry}
+\usepackage{lmodern}
+\usepackage{listings}
+
+\makeatletter
+\newcommand*\idstyle{\expandafter\id@style\the\lst@token\relax}
+\def\id@style#1#2\relax{%
+  \ifcat#1\relax\else
+    \ifnum`#1=\uccode`#1%
+      \relax
+    \else
+      \it
+    \fi
+  \fi
+}
+\makeatother
+
+\lstloadlanguages{Haskell}
+\lstnewenvironment{haskell}
+{
+\lstset{
+  language=Haskell,
+  keywordstyle=\bfseries,
+  basicstyle=\relax,
+  stringstyle=\ttfamily,
+  commentstyle=\bfseries,
+  flexiblecolumns=false,
+  showspaces=false,
+  showtabs=false,
+  showstringspaces=false,
+% frame=tb,
+  basewidth=0.55em,
+  keywords={forall,case,of,instance,class,data,type,deriving},
+  identifierstyle=\idstyle,
+  literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+           {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+           {\\\\}{{\char`\\\char`\\}}1
+           {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+           {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2
+           {\ .\ }{{$\circ$}}2
+           {>>}{{>>}}2 {>>=}{{$\gg\!\!=$}}3
+           {|}{{$\mid$}}1
+           {_}{{\underline{ }}}1
+}
+}{}
+
+\title{Project 3\\\large\sc Program Verification 2013}
+\author{Bert Massop\\Tom Tervoort}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+%TODO Introduction
+
+\section{Approach}
+%TODO Approach
+
+\subsection{Weakest precondition rules}
+
+\section{Implementation}
+%TODO Implementation
+
+\subsection{Simplification}
+%TODO Simplification
+
+\section{Results}
+%TODO Results / Examples
+
+\section{Discussion}
+%TODO Discussion: scalability?
+
+\section{Conclusions}
+%TODO Conclusions
+
+\end{document}
